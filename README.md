@@ -1,6 +1,33 @@
-# Card Sorting Expo App
+# Terrcatt - Participatory Territorial Decision Support
 
-A React Native Expo app showcasing different card sorting mechanisms using 17 Terrcatt cards.
+A React Native Expo app that digitizes a participatory card sorting method for territorial decision-making, developed in collaboration with **Prof. Marianne Cohen** (Sorbonne Université) as part of the **TTERCAT research project**.
+
+## Project Purpose
+
+### Background
+
+The Roya Valley (French Maritime Alps) was devastated by Storm Alex in October 2020. The region contains ~23,000 agricultural terraces, largely abandoned, which research shows provide resilience against extreme weather events. The TTERCAT project aims to support decision-making for terrace rehabilitation through participatory methods.
+
+### What This App Does
+
+This app digitizes a **card sorting method** where participants classify 16 landscape characteristics (slope, drainage, road access, etc.) from "Very Favorable" to "Very Unfavorable" for terrace rehabilitation.
+
+**Original method:** Physical card game facilitating discussion between researchers and stakeholders (terrace owners, public/private actors).
+
+**Digital version goals:**
+1. **Scale data collection** - Gather perceptions from more participants than physical workshops allow
+2. **Lead magnet** - Demonstrate the value of participatory analysis to attract communities facing similar territorial challenges
+3. **Compare perspectives** - Analyze how different stakeholder groups (landowners vs. public actors vs. researchers) perceive the same characteristics
+4. **Validate with terrain truth** - Compare crowdsourced ratings with scientific field data
+
+### Who Is This For?
+
+- **Terrace owners** - Share local knowledge about what matters for rehabilitation
+- **Public actors** - Understand community priorities for policy decisions
+- **Researchers** - Collect structured data on stakeholder perceptions
+- **Anyone interested** - Explore the methodology and reach out for collaboration on similar projects
+
+---
 
 ## Features
 
@@ -93,6 +120,35 @@ The app includes 17 Terrcatt cards:
 - Apiculture, Drainage, Faune Sauvage, Hyper-pluviosité
 - Irrégularité Topographique, Négatif, Pâture, Positif
 - Stockage Eau, Substrat Géologique, Terrasses, Utilisation Agricole
+
+## Methodology
+
+The app implements three sorting mechanisms to study which best captures stakeholder preferences:
+
+| Method | Cognitive Process | Best For |
+|--------|-------------------|----------|
+| **Direct Rating** | Absolute judgment ("Is this favorable?") | Clean data, matches original physical method |
+| **Pairwise Compare** | Relative trade-offs ("Which matters more?") | Reveals hidden preferences within same rating tier |
+| **Swipe Sort** | Quick intuitive reactions | Mobile-native engagement, initial screening |
+
+### Future Development
+
+- **CrowdBT aggregation** - Combine pairwise comparisons across users for global ranking
+- **User profiling** - Capture persona (terrace owner, public actor, researcher) to segment analysis
+- **Terrain truth comparison** - Show divergence from Prof. Cohen's scientific reference data
+- **A/B testing** - Compare engagement and data quality across methods
+
+### Scientific References
+
+This approach draws from established participatory decision-support literature:
+- Multi-Criteria Decision Analysis (MCDA) for land use planning
+- Participatory GIS (PGIS) combining local knowledge with spatial data
+- Q-Methodology for identifying stakeholder viewpoint archetypes
+- CrowdBT for crowdsourced ranking aggregation
+
+## Contact
+
+Interested in applying this methodology to your territorial challenges? This project demonstrates how digital tools can scale participatory analysis for environmental decision-making.
 
 ## Notes
 
