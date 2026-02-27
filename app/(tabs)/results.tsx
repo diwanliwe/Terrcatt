@@ -57,7 +57,7 @@ export default function ResultsScreen() {
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent}>
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Swipe Ranking</Text>
+        <Text style={styles.sectionTitle}>Classement Swipe</Text>
         {hasSwipeData ? (
           <FlatList
             data={swipeRanking}
@@ -71,8 +71,8 @@ export default function ResultsScreen() {
           />
         ) : (
           <View style={styles.emptyContainer}>
-            <Text style={styles.emptyText}>No swipe data yet</Text>
-            <Text style={styles.emptySubtext}>Go to the Swipe tab to start ranking</Text>
+            <Text style={styles.emptyText}>Aucune donnée de swipe</Text>
+            <Text style={styles.emptySubtext}>Allez dans l'onglet Swipe pour commencer</Text>
           </View>
         )}
       </View>
@@ -80,7 +80,7 @@ export default function ResultsScreen() {
       <View style={styles.divider} />
 
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Compare Ranking</Text>
+        <Text style={styles.sectionTitle}>Classement Comparaison</Text>
         {hasCompareData ? (
           <FlatList
             data={compareRanking}
@@ -94,8 +94,8 @@ export default function ResultsScreen() {
           />
         ) : (
           <View style={styles.emptyContainer}>
-            <Text style={styles.emptyText}>No comparison data yet</Text>
-            <Text style={styles.emptySubtext}>Go to the Compare tab to start ranking</Text>
+            <Text style={styles.emptyText}>Aucune donnée de comparaison</Text>
+            <Text style={styles.emptySubtext}>Allez dans l'onglet Comparer pour commencer</Text>
           </View>
         )}
       </View>
@@ -103,7 +103,7 @@ export default function ResultsScreen() {
       <View style={styles.divider} />
 
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Rating Ranking</Text>
+        <Text style={styles.sectionTitle}>Classement Notation</Text>
         {hasRatingData ? (
           <FlatList
             data={ratingRanking}
@@ -117,8 +117,8 @@ export default function ResultsScreen() {
           />
         ) : (
           <View style={styles.emptyContainer}>
-            <Text style={styles.emptyText}>No rating data yet</Text>
-            <Text style={styles.emptySubtext}>Go to the Rate tab to start ranking</Text>
+            <Text style={styles.emptyText}>Aucune donnée de notation</Text>
+            <Text style={styles.emptySubtext}>Allez dans l'onglet Noter pour commencer</Text>
           </View>
         )}
       </View>
@@ -129,7 +129,7 @@ export default function ResultsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: '#FDFCFA',
   },
   scrollContent: {
     paddingTop: 20,

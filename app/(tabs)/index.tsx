@@ -1,6 +1,10 @@
 import React, { useCallback, useMemo } from 'react';
-import { StyleSheet, View, Text, Pressable, Image } from 'react-native';
+import { StyleSheet, View, Text, Pressable, Image, Dimensions } from 'react-native';
 import { useCards, CARDS, CardData } from '@/context/CardContext';
+
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
+const CARD_WIDTH = SCREEN_WIDTH * 0.7;
+const CARD_HEIGHT = CARD_WIDTH * 1.1;
 import { SwipeableCard } from '@/components/SwipeableCard';
 import { Card } from '@/components/Card';
 
@@ -70,16 +74,16 @@ export default function SwipeScreen() {
     if (firstPassScore === 1) {
       // Was favorable, choose: very favorable (+2) or keep favorable (+1) or neutral (0)
       return [
-        { label: 'Very favorable', value: 2, color: '#4CAF50' },
+        { label: 'Très favorable', value: 2, color: '#4CAF50' },
         { label: 'Favorable', value: 1, color: '#8BC34A' },
-        { label: 'Neutral', value: 0, color: '#9E9E9E' },
+        { label: 'Neutre', value: 0, color: '#9E9E9E' },
       ];
     } else {
       // Was unfavorable, choose: very unfavorable (-2) or keep unfavorable (-1) or neutral (0)
       return [
-        { label: 'Very unfavorable', value: -2, color: '#F44336' },
-        { label: 'Unfavorable', value: -1, color: '#FF9800' },
-        { label: 'Neutral', value: 0, color: '#9E9E9E' },
+        { label: 'Très défavorable', value: -2, color: '#F44336' },
+        { label: 'Défavorable', value: -1, color: '#FF9800' },
+        { label: 'Neutre', value: 0, color: '#9E9E9E' },
       ];
     }
   };
@@ -89,24 +93,24 @@ export default function SwipeScreen() {
     return (
       <View style={styles.container}>
         <View style={styles.headerContainer}>
-          <Text style={styles.stepText}>Step 1 of 2</Text>
+          <Text style={styles.stepText}>Étape 1 sur 2</Text>
           <Text style={styles.progressText}>
-            {isStep1Complete ? 'Complete!' : `${currentIndex + 1}/${CARDS.length}`}
+            {isStep1Complete ? 'Terminé !' : `${currentIndex + 1}/${CARDS.length}`}
           </Text>
         </View>
 
         <View style={styles.cardContainer}>
           {isStep1Complete ? (
             <View style={styles.completeContainer}>
-              <Text style={styles.completeText}>Step 1 Complete!</Text>
+              <Text style={styles.completeText}>Étape 1 terminée !</Text>
               <Text style={styles.completeSubtext}>
                 {step2Cards.length > 0
-                  ? `${step2Cards.length} cards to refine in Step 2`
-                  : 'All cards marked as neutral'}
+                  ? `${step2Cards.length} cartes à affiner à l'étape 2`
+                  : 'Toutes les cartes sont neutres'}
               </Text>
               {step2Cards.length > 0 && (
                 <Pressable style={styles.nextStepButton} onPress={handleStartStep2}>
-                  <Text style={styles.nextStepButtonText}>Continue to Step 2</Text>
+                  <Text style={styles.nextStepButtonText}>Passer à l'étape 2</Text>
                 </Pressable>
               )}
             </View>
@@ -124,7 +128,7 @@ export default function SwipeScreen() {
                         onSwipeLeft={handleSwipeLeft}
                         onSwipeRight={handleSwipeRight}
                         onSwipeUp={handleSwipeUp}
-                        labels={{ right: 'Favorable', left: 'Unfavorable', up: 'Neutral' }}
+                        labels={{ right: 'Favorable', left: 'Défavorable', up: 'Neutre' }}
                       />
                     );
                   }
@@ -142,12 +146,12 @@ export default function SwipeScreen() {
 
         <View style={styles.instructionsContainer}>
           <Text style={styles.instructionText}>
-            {isStep1Complete ? '' : 'Swipe: Right=Favorable, Left=Unfavorable, Up=Neutral'}
+            {isStep1Complete ? '' : 'Glisser : Droite=Favorable, Gauche=Défavorable, Haut=Neutre'}
           </Text>
         </View>
 
         <Pressable style={styles.resetButton} onPress={handleReset}>
-          <Text style={styles.resetButtonText}>Reset</Text>
+          <Text style={styles.resetButtonText}>Réinitialiser</Text>
         </Pressable>
       </View>
     );
@@ -157,22 +161,22 @@ export default function SwipeScreen() {
   return (
     <View style={styles.container}>
       <View style={styles.headerContainer}>
-        <Text style={styles.stepText}>Step 2 of 2</Text>
+        <Text style={styles.stepText}>Étape 2 sur 2</Text>
         <Text style={styles.progressText}>
-          {isStep2Complete ? 'Complete!' : `${step2Index + 1}/${step2Cards.length}`}
+          {isStep2Complete ? 'Terminé !' : `${step2Index + 1}/${step2Cards.length}`}
         </Text>
       </View>
 
       <View style={styles.cardContainer}>
         {isStep2Complete ? (
           <View style={styles.completeContainer}>
-            <Text style={styles.completeText}>All done!</Text>
+            <Text style={styles.completeText}>Terminé !</Text>
             <Text style={styles.completeSubtext}>
-              Check the Results tab to see your rankings
+              Consultez l'onglet Résultats pour voir vos classements
             </Text>
           </View>
         ) : (
-          <Card card={currentStep2Card} />
+          <Card card={currentStep2Card} size="large" />
         )}
       </View>
 
@@ -194,7 +198,7 @@ export default function SwipeScreen() {
             ))}
           </View>
           <Text style={styles.step2Hint}>
-            Previously marked as: {state.swipeFirstPass[currentStep2Card.id] === 1 ? 'Favorable' : 'Unfavorable'}
+            Précédemment classé : {state.swipeFirstPass[currentStep2Card.id] === 1 ? 'Favorable' : 'Défavorable'}
           </Text>
         </View>
       )}
@@ -209,7 +213,7 @@ export default function SwipeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: '#FDFCFA',
     alignItems: 'center',
     paddingTop: 20,
   },
@@ -219,7 +223,7 @@ const styles = StyleSheet.create({
   },
   stepText: {
     fontSize: 14,
-    color: '#007AFF',
+    color: '#C4956A',
     fontWeight: '600',
     marginBottom: 4,
   },
@@ -240,20 +244,19 @@ const styles = StyleSheet.create({
     opacity: 0.7,
   },
   cardPreview: {
-    width: 200,
-    height: 280,
-    backgroundColor: '#ffffff',
-    borderRadius: 16,
+    width: CARD_WIDTH,
+    height: CARD_HEIGHT,
+    backgroundColor: '#000',
+    borderRadius: 20,
     overflow: 'hidden',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.15,
-    shadowRadius: 8,
-    elevation: 5,
+    borderWidth: 1.5,
+    borderColor: '#DEDDDA',
   },
   previewImage: {
-    width: '100%',
-    height: '100%',
+    ...StyleSheet.absoluteFillObject,
+    width: undefined,
+    height: undefined,
+    transform: [{ scale: 1.15 }],
   },
   completeContainer: {
     alignItems: 'center',
@@ -271,7 +274,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   nextStepButton: {
-    backgroundColor: '#007AFF',
+    backgroundColor: '#C4956A',
     paddingHorizontal: 32,
     paddingVertical: 14,
     borderRadius: 8,
@@ -320,7 +323,7 @@ const styles = StyleSheet.create({
     marginTop: 10,
   },
   resetButton: {
-    backgroundColor: '#007AFF',
+    backgroundColor: '#C4956A',
     paddingHorizontal: 32,
     paddingVertical: 12,
     borderRadius: 8,

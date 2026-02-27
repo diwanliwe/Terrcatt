@@ -103,6 +103,10 @@ Key reducer actions: `SWIPE_FIRST_PASS`, `SWIPE_SECOND_PASS`, `COMPARE_WIN`, `CO
 
 15 cards defined in `context/CardContext.tsx` with images in `/assets/cards/`. Card images use `require()` for static Expo imports.
 
+## Language
+
+All user-facing text in the app **must be in French**. This includes tab labels, buttons, instructions, status messages, and any new UI text. Code comments and variable names remain in English.
+
 ## Key Patterns
 
 - All state is in-memory only (resets on app restart)

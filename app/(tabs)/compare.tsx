@@ -43,7 +43,7 @@ export default function CompareScreen() {
     <View style={styles.container}>
       <View style={styles.countContainer}>
         <Text style={styles.countText}>
-          Comparisons: {state.comparisonCount}
+          Comparaisons : {state.comparisonCount}
         </Text>
       </View>
 
@@ -84,12 +84,12 @@ export default function CompareScreen() {
 
       <View style={styles.instructionsContainer}>
         <Text style={styles.instructionText}>
-          Tap the more favorable card, or = if equal
+          Touchez la carte la plus favorable, ou = si égales
         </Text>
       </View>
 
       <Pressable style={styles.resetButton} onPress={handleReset}>
-        <Text style={styles.resetButtonText}>Reset</Text>
+        <Text style={styles.resetButtonText}>Réinitialiser</Text>
       </Pressable>
     </View>
   );
@@ -98,7 +98,7 @@ export default function CompareScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: '#FDFCFA',
     alignItems: 'center',
     paddingTop: 20,
   },
@@ -159,7 +159,7 @@ const styles = StyleSheet.create({
     color: '#888',
   },
   resetButton: {
-    backgroundColor: '#007AFF',
+    backgroundColor: '#C4956A',
     paddingHorizontal: 32,
     paddingVertical: 12,
     borderRadius: 8,

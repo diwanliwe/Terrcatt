@@ -25,28 +25,28 @@ export default function TabLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Swipe',
+          title: 'Glisser',
           tabBarIcon: ({ color }) => <TabBarIcon name="hand-pointer-o" color={color} />,
         }}
       />
       <Tabs.Screen
         name="compare"
         options={{
-          title: 'Compare',
+          title: 'Comparer',
           tabBarIcon: ({ color }) => <TabBarIcon name="balance-scale" color={color} />,
         }}
       />
       <Tabs.Screen
         name="rate"
         options={{
-          title: 'Rate',
+          title: 'Noter',
           tabBarIcon: ({ color }) => <TabBarIcon name="star" color={color} />,
         }}
       />
       <Tabs.Screen
         name="results"
         options={{
-          title: 'Results',
+          title: 'Résultats',
           tabBarIcon: ({ color }) => <TabBarIcon name="trophy" color={color} />,
         }}
       />

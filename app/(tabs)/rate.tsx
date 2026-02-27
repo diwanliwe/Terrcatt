@@ -4,11 +4,11 @@ import { useCards, CARDS } from '@/context/CardContext';
 import { Card } from '@/components/Card';
 
 const RATING_OPTIONS = [
-  { label: 'Very favorable', score: 2, color: '#4CAF50' },
+  { label: 'Très favorable', score: 2, color: '#4CAF50' },
   { label: 'Favorable', score: 1, color: '#8BC34A' },
-  { label: 'Neutral', score: 0, color: '#9E9E9E' },
-  { label: 'Unfavorable', score: -1, color: '#FF9800' },
-  { label: 'Very unfavorable', score: -2, color: '#F44336' },
+  { label: 'Neutre', score: 0, color: '#9E9E9E' },
+  { label: 'Défavorable', score: -1, color: '#FF9800' },
+  { label: 'Très défavorable', score: -2, color: '#F44336' },
 ];
 
 export default function RateScreen() {
@@ -30,20 +30,20 @@ export default function RateScreen() {
     <View style={styles.container}>
       <View style={styles.progressContainer}>
         <Text style={styles.progressText}>
-          {isComplete ? 'Complete!' : `${currentIndex + 1}/${CARDS.length}`}
+          {isComplete ? 'Terminé !' : `${currentIndex + 1}/${CARDS.length}`}
         </Text>
       </View>
 
       <View style={styles.cardContainer}>
         {isComplete ? (
           <View style={styles.completeContainer}>
-            <Text style={styles.completeText}>All cards rated!</Text>
+            <Text style={styles.completeText}>Toutes les cartes sont notées !</Text>
             <Text style={styles.completeSubtext}>
-              Check the Results tab to see your rankings
+              Consultez l'onglet Résultats pour voir vos classements
             </Text>
           </View>
         ) : (
-          <Card card={currentCard} />
+          <Card card={currentCard} size="large" />
         )}
       </View>
 
@@ -67,14 +67,14 @@ export default function RateScreen() {
             ))}
           </View>
           <View style={styles.labelsRow}>
-            <Text style={styles.labelLeft}>Very favorable</Text>
-            <Text style={styles.labelRight}>Very unfavorable</Text>
+            <Text style={styles.labelLeft}>Très favorable</Text>
+            <Text style={styles.labelRight}>Très défavorable</Text>
           </View>
         </View>
       )}
 
       <Pressable style={styles.resetButton} onPress={handleReset}>
-        <Text style={styles.resetButtonText}>Reset</Text>
+        <Text style={styles.resetButtonText}>Réinitialiser</Text>
       </Pressable>
     </View>
   );
@@ -83,7 +83,7 @@ export default function RateScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: '#FDFCFA',
     alignItems: 'center',
     paddingTop: 20,
   },
@@ -155,7 +155,7 @@ const styles = StyleSheet.create({
     color: '#666',
   },
   resetButton: {
-    backgroundColor: '#007AFF',
+    backgroundColor: '#C4956A',
     paddingHorizontal: 32,
     paddingVertical: 12,
     borderRadius: 8,

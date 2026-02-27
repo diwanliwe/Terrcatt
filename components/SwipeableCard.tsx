@@ -16,6 +16,8 @@ import { CardData } from '@/context/CardContext';
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 const SWIPE_THRESHOLD_X = SCREEN_WIDTH * 0.25;
 const SWIPE_THRESHOLD_Y = 100;
+const CARD_WIDTH = SCREEN_WIDTH * 0.7;
+const CARD_HEIGHT = CARD_WIDTH * 1.1;
 
 interface SwipeableCardProps {
   card: CardData;
@@ -34,7 +36,7 @@ export function SwipeableCard({
   onSwipeLeft,
   onSwipeRight,
   onSwipeUp,
-  labels = { right: 'Favorable', left: 'Unfavorable', up: 'Neutral' }
+  labels = { right: 'Favorable', left: 'Défavorable', up: 'Neutre' }
 }: SwipeableCardProps) {
   const translateX = useSharedValue(0);
   const translateY = useSharedValue(0);
@@ -111,7 +113,7 @@ export function SwipeableCard({
   return (
     <GestureDetector gesture={panGesture}>
       <Animated.View style={[styles.container, cardStyle]}>
-        <Card card={card} />
+        <Card card={card} size="large" />
         <Animated.View style={[styles.label, styles.rightLabel, rightOpacity]}>
           <Text style={[styles.labelText, styles.rightLabelText]}>{labels.right}</Text>
         </Animated.View>
@@ -140,19 +142,18 @@ const styles = StyleSheet.create({
     borderWidth: 3,
   },
   rightLabel: {
-    top: 30,
-    right: 10,
+    top: 40,
+    right: 20,
     borderColor: '#4CAF50',
   },
   leftLabel: {
-    top: 30,
-    left: 10,
+    top: 40,
+    left: 20,
     borderColor: '#F44336',
   },
   upLabel: {
-    top: 10,
-    left: '50%',
-    marginLeft: -40,
+    top: 20,
+    alignSelf: 'center',
     borderColor: '#9E9E9E',
   },
   labelText: {
