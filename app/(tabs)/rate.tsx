@@ -4,11 +4,11 @@ import { useCards, CARDS } from '@/context/CardContext';
 import { Card } from '@/components/Card';
 
 const RATING_OPTIONS = [
-  { label: 'Très favorable', score: 2, color: '#4CAF50' },
-  { label: 'Favorable', score: 1, color: '#8BC34A' },
-  { label: 'Neutre', score: 0, color: '#9E9E9E' },
-  { label: 'Défavorable', score: -1, color: '#FF9800' },
   { label: 'Très défavorable', score: -2, color: '#F44336' },
+  { label: 'Défavorable', score: -1, color: '#FF9800' },
+  { label: 'Neutre', score: 0, color: '#9E9E9E' },
+  { label: 'Favorable', score: 1, color: '#8BC34A' },
+  { label: 'Très favorable', score: 2, color: '#4CAF50' },
 ];
 
 export default function RateScreen() {
@@ -67,8 +67,8 @@ export default function RateScreen() {
             ))}
           </View>
           <View style={styles.labelsRow}>
-            <Text style={styles.labelLeft}>Très favorable</Text>
-            <Text style={styles.labelRight}>Très défavorable</Text>
+            <Text style={styles.labelLeft}>Très défavorable</Text>
+            <Text style={styles.labelRight}>Très favorable</Text>
           </View>
         </View>
       )}
