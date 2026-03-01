@@ -11,7 +11,7 @@ const RATING_OPTIONS = [
   { label: 'Très favorable', score: 2, color: '#4CAF50' },
 ];
 
-export default function RateScreen() {
+export function RateMode() {
   const { state, rateCard, nextRatingCard, resetRating } = useCards();
   const currentIndex = state.currentRatingIndex;
   const isComplete = currentIndex >= CARDS.length;
@@ -85,7 +85,6 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#FDFCFA',
     alignItems: 'center',
-    paddingTop: 20,
   },
   progressContainer: {
     marginBottom: 20,

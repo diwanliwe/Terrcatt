@@ -2,7 +2,10 @@ import React, { createContext, useContext, useReducer, ReactNode } from 'react';
 import { ImageSourcePropType } from 'react-native';
 
 // Types
+export type GameMode = 'swipe' | 'compare' | 'rate';
+
 interface CardState {
+  gameMode: GameMode;
   swipeScores: Record<number, number>;
   swipeFirstPass: Record<number, number>; // Step 1 results: 1=favorable, -1=unfavorable, 0=neutral
   swipeStep: 1 | 2;
@@ -15,6 +18,7 @@ interface CardState {
 }
 
 type CardAction =
+  | { type: 'SET_GAME_MODE'; mode: GameMode }
   | { type: 'SWIPE_FIRST_PASS'; cardId: number; value: number }
   | { type: 'SWIPE_SECOND_PASS'; cardId: number; value: number }
   | { type: 'NEXT_SWIPE_CARD' }
@@ -42,10 +46,12 @@ interface CardContextType {
   resetCompare: () => void;
   resetRating: () => void;
   nextRatingCard: () => void;
+  setGameMode: (mode: GameMode) => void;
 }
 
 // Initial state
 const initialState: CardState = {
+  gameMode: 'swipe',
   swipeScores: {},
   swipeFirstPass: {},
   swipeStep: 1,
@@ -60,6 +66,11 @@ const initialState: CardState = {
 // Reducer
 function cardReducer(state: CardState, action: CardAction): CardState {
   switch (action.type) {
+    case 'SET_GAME_MODE':
+      return {
+        ...state,
+        gameMode: action.mode,
+      };
     case 'SWIPE_FIRST_PASS':
       return {
         ...state,
@@ -205,6 +216,10 @@ export function CardProvider({ children }: { children: ReactNode }) {
     dispatch({ type: 'NEXT_RATING_CARD' });
   };
 
+  const setGameMode = (mode: GameMode) => {
+    dispatch({ type: 'SET_GAME_MODE', mode });
+  };
+
   return (
     <CardContext.Provider
       value={{
@@ -221,6 +236,7 @@ export function CardProvider({ children }: { children: ReactNode }) {
         resetCompare,
         resetRating,
         nextRatingCard,
+        setGameMode,
       }}
     >
       {children}

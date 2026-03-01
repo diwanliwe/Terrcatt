@@ -1,128 +1,83 @@
 import React, { useMemo } from 'react';
-import { StyleSheet, View, Text, FlatList, ScrollView } from 'react-native';
+import { StyleSheet, View, Text, FlatList } from 'react-native';
 import { useCards, CARDS, CardData } from '@/context/CardContext';
 import { Card } from '@/components/Card';
 
+const MODE_CONFIG = {
+  swipe: {
+    title: 'Classement Glisser',
+    emptyLabel: 'Glisser',
+  },
+  compare: {
+    title: 'Classement Comparaison',
+    emptyLabel: 'Comparer',
+  },
+  rate: {
+    title: 'Classement Notation',
+    emptyLabel: 'Noter',
+  },
+} as const;
+
 export default function ResultsScreen() {
   const { state } = useCards();
+  const { gameMode } = state;
+  const config = MODE_CONFIG[gameMode];
 
-  const swipeRanking = useMemo(() => {
+  const scores =
+    gameMode === 'swipe' ? state.swipeScores :
+    gameMode === 'compare' ? state.compareScores :
+    state.ratingScores;
+
+  const hasData = Object.keys(scores).length > 0;
+
+  const ranking = useMemo(() => {
+    const fallback = gameMode === 'rate' ? -999 : 0;
     return [...CARDS].sort((a, b) => {
-      const scoreA = state.swipeScores[a.id] || 0;
-      const scoreB = state.swipeScores[b.id] || 0;
+      const scoreA = scores[a.id] ?? fallback;
+      const scoreB = scores[b.id] ?? fallback;
       return scoreB - scoreA;
     });
-  }, [state.swipeScores]);
+  }, [scores, gameMode]);
 
-  const compareRanking = useMemo(() => {
-    return [...CARDS].sort((a, b) => {
-      const scoreA = state.compareScores[a.id] || 0;
-      const scoreB = state.compareScores[b.id] || 0;
-      return scoreB - scoreA;
-    });
-  }, [state.compareScores]);
+  const formatScore = (card: CardData) => {
+    const score = scores[card.id];
+    if (score === undefined) {
+      return gameMode === 'rate' ? '-' : '0';
+    }
+    return score > 0 ? `+${score}` : `${score}`;
+  };
 
-  const ratingRanking = useMemo(() => {
-    return [...CARDS].sort((a, b) => {
-      const scoreA = state.ratingScores[a.id] ?? -999;
-      const scoreB = state.ratingScores[b.id] ?? -999;
-      return scoreB - scoreA;
-    });
-  }, [state.ratingScores]);
-
-  const hasSwipeData = Object.keys(state.swipeScores).length > 0;
-  const hasCompareData = Object.keys(state.compareScores).length > 0;
-  const hasRatingData = Object.keys(state.ratingScores).length > 0;
-
-  const renderCard = (card: CardData, index: number, scores: Record<number, number>) => (
-    <View style={styles.cardItem}>
-      <Card card={card} size="small" rank={index + 1} />
-      <Text style={styles.scoreText}>
-        {scores[card.id] !== undefined ? (scores[card.id] > 0 ? `+${scores[card.id]}` : scores[card.id]) : '0'}
-      </Text>
-    </View>
-  );
-
-  const renderRatingCard = (card: CardData, index: number) => (
-    <View style={styles.cardItem}>
-      <Card card={card} size="small" rank={index + 1} />
-      <Text style={styles.scoreText}>
-        {state.ratingScores[card.id] !== undefined
-          ? (state.ratingScores[card.id] > 0 ? `+${state.ratingScores[card.id]}` : state.ratingScores[card.id])
-          : '-'}
-      </Text>
+  const renderItem = ({ item, index }: { item: CardData; index: number }) => (
+    <View style={styles.cardRow}>
+      <Text style={styles.rankText}>#{index + 1}</Text>
+      <Card card={item} size="small" />
+      <View style={styles.cardInfo}>
+        <Text style={styles.cardName}>{item.name}</Text>
+        <Text style={styles.scoreText}>{formatScore(item)}</Text>
+      </View>
     </View>
   );
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent}>
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Classement Swipe</Text>
-        {hasSwipeData ? (
-          <FlatList
-            data={swipeRanking}
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            keyExtractor={(card) => `swipe-${card.id}`}
-            renderItem={({ item, index }) => renderCard(item, index, state.swipeScores)}
-            contentContainerStyle={styles.listContent}
-            scrollEnabled={true}
-            nestedScrollEnabled={true}
-          />
-        ) : (
-          <View style={styles.emptyContainer}>
-            <Text style={styles.emptyText}>Aucune donnée de swipe</Text>
-            <Text style={styles.emptySubtext}>Allez dans l'onglet Swipe pour commencer</Text>
-          </View>
-        )}
-      </View>
+    <View style={styles.container}>
+      <Text style={styles.sectionTitle}>{config.title}</Text>
 
-      <View style={styles.divider} />
-
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Classement Comparaison</Text>
-        {hasCompareData ? (
-          <FlatList
-            data={compareRanking}
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            keyExtractor={(card) => `compare-${card.id}`}
-            renderItem={({ item, index }) => renderCard(item, index, state.compareScores)}
-            contentContainerStyle={styles.listContent}
-            scrollEnabled={true}
-            nestedScrollEnabled={true}
-          />
-        ) : (
-          <View style={styles.emptyContainer}>
-            <Text style={styles.emptyText}>Aucune donnée de comparaison</Text>
-            <Text style={styles.emptySubtext}>Allez dans l'onglet Comparer pour commencer</Text>
-          </View>
-        )}
-      </View>
-
-      <View style={styles.divider} />
-
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Classement Notation</Text>
-        {hasRatingData ? (
-          <FlatList
-            data={ratingRanking}
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            keyExtractor={(card) => `rating-${card.id}`}
-            renderItem={({ item, index }) => renderRatingCard(item, index)}
-            contentContainerStyle={styles.listContent}
-            scrollEnabled={true}
-            nestedScrollEnabled={true}
-          />
-        ) : (
-          <View style={styles.emptyContainer}>
-            <Text style={styles.emptyText}>Aucune donnée de notation</Text>
-            <Text style={styles.emptySubtext}>Allez dans l'onglet Noter pour commencer</Text>
-          </View>
-        )}
-      </View>
-    </ScrollView>
+      {hasData ? (
+        <FlatList
+          data={ranking}
+          keyExtractor={(card) => `result-${card.id}`}
+          renderItem={renderItem}
+          contentContainerStyle={styles.listContent}
+        />
+      ) : (
+        <View style={styles.emptyContainer}>
+          <Text style={styles.emptyText}>Aucune donnée</Text>
+          <Text style={styles.emptySubtext}>
+            Jouez en mode {config.emptyLabel} pour commencer
+          </Text>
+        </View>
+      )}
+    </View>
   );
 }
 
@@ -131,53 +86,58 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#FDFCFA',
   },
-  scrollContent: {
-    paddingTop: 20,
-    paddingBottom: 40,
-  },
-  section: {
-    minHeight: 180,
-  },
   sectionTitle: {
     fontSize: 20,
     fontWeight: '600',
     color: '#333',
     marginLeft: 20,
-    marginBottom: 16,
+    marginTop: 16,
+    marginBottom: 12,
   },
   listContent: {
     paddingHorizontal: 16,
+    paddingBottom: 30,
+  },
+  cardRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 8,
     gap: 12,
   },
-  cardItem: {
-    alignItems: 'center',
-    marginHorizontal: 4,
+  rankText: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#C4956A',
+    width: 32,
+    textAlign: 'center',
+  },
+  cardInfo: {
+    flex: 1,
+    marginLeft: 4,
+  },
+  cardName: {
+    fontSize: 15,
+    fontWeight: '500',
+    color: '#333',
   },
   scoreText: {
-    marginTop: 8,
     fontSize: 14,
-    fontWeight: '500',
     color: '#666',
-  },
-  divider: {
-    height: 1,
-    backgroundColor: '#ddd',
-    marginVertical: 16,
-    marginHorizontal: 20,
+    marginTop: 2,
   },
   emptyContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    minHeight: 100,
   },
   emptyText: {
-    fontSize: 16,
+    fontSize: 18,
+    fontWeight: '600',
     color: '#666',
-    marginBottom: 4,
+    marginBottom: 6,
   },
   emptySubtext: {
-    fontSize: 14,
+    fontSize: 15,
     color: '#999',
   },
 });

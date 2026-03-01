@@ -18,7 +18,7 @@ function getRandomPair(exclude: [CardData, CardData] | null): [CardData, CardDat
   return [card1, card2];
 }
 
-export default function CompareScreen() {
+export function CompareMode() {
   const { state, compareWin, compareTie, resetCompare } = useCards();
   const [currentPair, setCurrentPair] = useState<[CardData, CardData]>(() => getRandomPair(null));
 
@@ -100,7 +100,6 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#FDFCFA',
     alignItems: 'center',
-    paddingTop: 20,
   },
   countContainer: {
     marginBottom: 20,
