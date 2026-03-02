@@ -6,7 +6,7 @@ const CONTACT_EMAIL = 'marianne.cohen@sorbonne-universite.fr';
 
 export default function SettingsScreen() {
   const handleContact = () => {
-    Linking.openURL(`mailto:${CONTACT_EMAIL}?subject=Projet TTERCAT – Prise de contact`);
+    Linking.openURL(`mailto:${CONTACT_EMAIL}?subject=Projet Terrcatt – Prise de contact`);
   };
 
   return (
@@ -15,7 +15,7 @@ export default function SettingsScreen() {
         <Text style={styles.sectionTitle}>À propos</Text>
         <Text style={styles.paragraph}>
           Cette application est un prototype numérique d'une méthode participative de tri de cartes
-          développée dans le cadre du projet TTERCAT (Terrasses de culture et reconstruction d'un
+          développée dans le cadre du projet Terrcatt (Terrasses de culture et reconstruction d'un
           territoire post-catastrophe).
         </Text>
         <Text style={styles.paragraph}>
@@ -52,7 +52,7 @@ export default function SettingsScreen() {
         </Text>
       </View>
 
-      <Text style={styles.version}>TTERCAT v1.0</Text>
+      <Text style={styles.version}>Terrcatt v1.0</Text>
     </ScrollView>
   );
 }

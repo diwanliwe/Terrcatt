@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ### Research Background
 
-This app is a **digital prototype** of a participatory card sorting method developed by **Prof. Marianne Cohen** (Sorbonne Université) for the **TTERCAT project** (Terrasses de culture et reconstruction d'un territoire post-catastrophe).
+This app is a **digital prototype** of a participatory card sorting method developed by **Prof. Marianne Cohen** (Sorbonne Université) for the **Terrcatt project** (Terrasses de culture et reconstruction d'un territoire post-catastrophe).
 
 **Scientific context:**
 - The Roya Valley (French Alps) was devastated by Storm Alex (October 2020)
