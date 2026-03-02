@@ -1,156 +1,123 @@
-# Terrcatt - Participatory Territorial Decision Support
+# Terrcatt — Aide participative à la décision territoriale
 
-A React Native Expo app that digitizes a participatory card sorting method for territorial decision-making, developed in collaboration with **Prof. Marianne Cohen** (Sorbonne Université) as part of the **TTERCAT research project**.
-
-## Project Purpose
-
-### Background
-
-The Roya Valley (French Maritime Alps) was devastated by Storm Alex in October 2020. The region contains ~23,000 agricultural terraces, largely abandoned, which research shows provide resilience against extreme weather events. The TTERCAT project aims to support decision-making for terrace rehabilitation through participatory methods.
-
-### What This App Does
-
-This app digitizes a **card sorting method** where participants classify 16 landscape characteristics (slope, drainage, road access, etc.) from "Very Favorable" to "Very Unfavorable" for terrace rehabilitation.
-
-**Original method:** Physical card game facilitating discussion between researchers and stakeholders (terrace owners, public/private actors).
-
-**Digital version goals:**
-1. **Scale data collection** - Gather perceptions from more participants than physical workshops allow
-2. **Lead magnet** - Demonstrate the value of participatory analysis to attract communities facing similar territorial challenges
-3. **Compare perspectives** - Analyze how different stakeholder groups (landowners vs. public actors vs. researchers) perceive the same characteristics
-4. **Validate with terrain truth** - Compare crowdsourced ratings with scientific field data
-
-### Who Is This For?
-
-- **Terrace owners** - Share local knowledge about what matters for rehabilitation
-- **Public actors** - Understand community priorities for policy decisions
-- **Researchers** - Collect structured data on stakeholder perceptions
-- **Anyone interested** - Explore the methodology and reach out for collaboration on similar projects
+Application mobile interactive de tri de cartes, développée en collaboration avec **Prof. Marianne Cohen** (Sorbonne Université) dans le cadre du **projet Terrcatt** (Terrasses de culture et reconstruction d'un territoire post-catastrophe).
 
 ---
 
-## Features
+## Contexte
 
-### Tab 1 - Swipe Sorting
-- Tinder-like swipe interface
-- Swipe right to "like" (+1 score)
-- Swipe left to "dislike" (-1 score)
-- Animated card transitions
-- Progress indicator showing current card
+La vallée de la Roya (Alpes-Maritimes) a été dévastée par la tempête Alex en octobre 2020. La région compte environ 23 000 terrasses agricoles, en grande partie abandonnées, qui jouent un rôle clé dans la résilience face aux événements climatiques extrêmes. Le projet Terrcatt vise à accompagner la prise de décision pour la réhabilitation de ces terrasses grâce à des méthodes participatives.
 
-### Tab 2 - Comparison Sorting
-- Two cards displayed side by side
-- Tap a card to select it as the winner
-- Winner gets +1, loser gets -1
-- Random pair generation
-- Comparison counter
+## Qu'est-ce que cette application ?
 
-### Tab 3 - Rating
-- 5-point rating scale for each card
-- Very favorable (+2)
-- Favorable (+1)
-- Neutral (0)
-- Unfavorable (-1)
-- Very unfavorable (-2)
-- Progress indicator showing current card
+Cette application est la **version numérique** d'un jeu de cartes physique conçu par Prof. Cohen. Les participants classent 15 caractéristiques paysagères (pente, drainage, accès routier, etc.) de « Très favorable » à « Très défavorable » pour la réhabilitation des terrasses.
 
-### Tab 4 - Results
-- Three horizontal scrollable rankings
-- Swipe Ranking - cards ordered by swipe scores
-- Compare Ranking - cards ordered by comparison wins
-- Rating Ranking - cards ordered by rating scores
-- Rank badges and score display on each card
+L'objectif est triple :
 
-## Getting Started
+1. **Collecter des données à grande échelle** — Recueillir les perceptions de davantage de participants que ne le permettent les ateliers physiques
+2. **Comparer les perspectives** — Analyser comment différents groupes (propriétaires, acteurs publics, chercheurs) perçoivent les mêmes caractéristiques
+3. **Confronter au terrain** — Comparer les classements participatifs aux données scientifiques de terrain
 
-### Prerequisites
-- Node.js (v18 or later)
-- npm or yarn
-- Expo Go app on your mobile device (optional)
+## Comment ça marche ?
 
-### Installation
+L'application propose trois modes de classement :
+
+| Mode | Principe | Comment l'utiliser |
+|------|----------|--------------------|
+| **Glisser** | Réaction intuitive rapide | Glisser les cartes à droite (favorable), à gauche (défavorable) ou vers le haut (neutre), puis affiner le degré |
+| **Comparer** | Comparaison par paires | Deux cartes affichées côte à côte — toucher celle qui compte le plus |
+| **Noter** | Jugement absolu sur une échelle | Noter chaque carte de -2 (très défavorable) à +2 (très favorable) |
+
+Un onglet **Résultats** permet de visualiser les classements obtenus avec chaque méthode et de les comparer à la « vérité terrain » scientifique.
+
+## Les 15 cartes
+
+Olivier Murette, Pente, Route, TWI, Abandon, Apiculture, Drainage, Faune Sauvage, Hyper-pluviosité, Irrégularité Topographique, Pâture, Stockage Eau, Substrat Géologique, Terrasses, Utilisation Agricole.
+
+## À qui s'adresse cette application ?
+
+- **Propriétaires de terrasses** — Partager vos connaissances locales sur les critères importants pour la réhabilitation
+- **Acteurs publics** — Comprendre les priorités des communautés pour orienter les politiques publiques
+- **Chercheurs** — Collecter des données structurées sur les perceptions des parties prenantes
+- **Toute personne intéressée** — Découvrir la méthodologie et nous contacter pour une collaboration sur des projets similaires
+
+## Fondements méthodologiques
+
+Cette approche s'appuie sur des méthodes éprouvées de la littérature scientifique en aide à la décision participative :
+
+- **Analyse multicritère (MCDA)** — Pondération des critères pour les décisions d'aménagement du territoire
+- **SIG participatif (PGIS)** — Croisement des savoirs locaux avec les données spatiales
+- **Q-Méthodologie** — Identification des archétypes de points de vue des parties prenantes
+- **CrowdBT** — Agrégation de comparaisons par paires à grande échelle
+
+## Contact
+
+Vous êtes confronté à des enjeux de réhabilitation paysagère, de gestion participative du territoire ou de résilience post-catastrophe ? Ce projet montre comment les outils numériques peuvent amplifier l'impact de l'analyse participative.
+
+**Prof. Marianne Cohen** — marianne.cohen@sorbonne-universite.fr
+
+---
+
+## Development
+
+### Getting Started
 
 ```bash
-# Install dependencies
-npm install
-
-# Start the development server
-npx expo start
+npm install           # Install dependencies
+npm start             # Start Expo dev server (i=iOS, a=Android, w=web)
+npm run ios           # iOS simulator
+npm run android       # Android emulator
+npm run web           # Web browser
 ```
 
-### Running the App
+### Tech Stack
 
-After starting the dev server:
-- Press `i` to open in iOS Simulator
-- Press `a` to open in Android Emulator
-- Scan the QR code with Expo Go app on your phone
+- Expo SDK 54 with Expo Router (file-based navigation)
+- React Native Gesture Handler + Reanimated (swipe gestures and animations)
+- React Context + useReducer (state management)
+- TypeScript strict mode
 
-## Project Structure
+### Project Structure
 
 ```
 /app
   _layout.tsx           # Root layout with providers
   (tabs)/
     _layout.tsx         # Tab navigator configuration
-    index.tsx           # Swipe tab
-    compare.tsx         # Compare tab
-    rate.tsx            # Rate tab
-    results.tsx         # Results tab
+    index.tsx           # Game tab (swipe / compare / rate modes)
+    results.tsx         # Results tab with rankings
+    settings.tsx        # Settings / about tab
 /assets
-  /cards                # Card images (17 Terrcatt cards)
+  /cards                # Card images (15 Terrcatt cards)
 /components
-  Card.tsx              # Base card component
-  SwipeableCard.tsx     # Animated swipeable card
+  Card.tsx              # Base card component (small/medium/large)
+  SwipeableCard.tsx     # Animated swipeable card with color overlays
+  SwipeMode.tsx         # Two-step swipe sorting mode
+  CompareMode.tsx       # Pairwise comparison mode
+  RateMode.tsx          # 5-point rating mode
+  GameModeModal.tsx     # Mode selector modal
 /context
-  CardContext.tsx       # State management
+  CardContext.tsx        # State management (scores, game mode, reducer)
 ```
 
-## Tech Stack
+### Key Architecture Notes
 
-- Expo SDK 54
-- Expo Router (file-based navigation)
-- React Native Gesture Handler (swipe gestures)
-- React Native Reanimated (animations)
-- React Context + useReducer (state management)
-
-## Cards
-
-The app includes 17 Terrcatt cards:
-- Olivier Murette, Pente, Route, TWI, Abandon
-- Apiculture, Drainage, Faune Sauvage, Hyper-pluviosité
-- Irrégularité Topographique, Négatif, Pâture, Positif
-- Stockage Eau, Substrat Géologique, Terrasses, Utilisation Agricole
-
-## Methodology
-
-The app implements three sorting mechanisms to study which best captures stakeholder preferences:
-
-| Method | Cognitive Process | Best For |
-|--------|-------------------|----------|
-| **Direct Rating** | Absolute judgment ("Is this favorable?") | Clean data, matches original physical method |
-| **Pairwise Compare** | Relative trade-offs ("Which matters more?") | Reveals hidden preferences within same rating tier |
-| **Swipe Sort** | Quick intuitive reactions | Mobile-native engagement, initial screening |
+- Three independent scoring systems: swipe (two-pass), compare (pairwise), rating (5-point scale)
+- All state is in-memory only (resets on app restart)
+- Provider hierarchy: GestureHandlerRootView → ThemeProvider → CardProvider
+- 15 cards defined in `CardContext.tsx` with images loaded via `require()`
+- SwipeableCard supports customizable overlay colors via `colors` prop
+- All user-facing text is in French; code comments and variable names in English
 
 ### Future Development
 
-- **CrowdBT aggregation** - Combine pairwise comparisons across users for global ranking
-- **User profiling** - Capture persona (terrace owner, public actor, researcher) to segment analysis
-- **Terrain truth comparison** - Show divergence from Prof. Cohen's scientific reference data
-- **A/B testing** - Compare engagement and data quality across methods
+- **CrowdBT aggregation** — Combine pairwise comparisons across users for global ranking
+- **User profiling** — Capture persona (terrace owner, public actor, researcher) to segment analysis
+- **Confidence indicators** — Optional "how sure are you?" after ratings
+- **Qualitative capture** — "Why?" prompts for extreme ratings (+2/-2)
+- **Terrain truth comparison** — Show divergence from Prof. Cohen's scientific reference data
+- **A/B testing** — Compare engagement and data quality across methods
 
-### Scientific References
+---
 
-This approach draws from established participatory decision-support literature:
-- Multi-Criteria Decision Analysis (MCDA) for land use planning
-- Participatory GIS (PGIS) combining local knowledge with spatial data
-- Q-Methodology for identifying stakeholder viewpoint archetypes
-- CrowdBT for crowdsourced ranking aggregation
-
-## Contact
-
-Interested in applying this methodology to your territorial challenges? This project demonstrates how digital tools can scale participatory analysis for environmental decision-making.
-
-## Notes
-
-- Rankings reset on app restart (no persistence)
-- Swipe, compare, and rating scores are tracked independently
+*Terrcatt v1.0 — Sorbonne Université*
