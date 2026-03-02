@@ -85,7 +85,7 @@ const styles = StyleSheet.create({
     ...StyleSheet.absoluteFillObject,
     width: undefined,
     height: undefined,
-    transform: [{ scale: 1.15 }],
+    transform: [{ scale: 1.05 }],
   },
   rankBadge: {
     position: 'absolute',

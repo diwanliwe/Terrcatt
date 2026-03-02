@@ -29,6 +29,11 @@ interface SwipeableCardProps {
     left: string;
     up?: string;
   };
+  colors?: {
+    right: string;
+    left: string;
+    up?: string;
+  };
 }
 
 export function SwipeableCard({
@@ -36,8 +41,12 @@ export function SwipeableCard({
   onSwipeLeft,
   onSwipeRight,
   onSwipeUp,
-  labels = { right: 'Favorable', left: 'Défavorable', up: 'Neutre' }
+  labels = { right: 'Favorable', left: 'Défavorable', up: 'Neutre' },
+  colors,
 }: SwipeableCardProps) {
+  const rightColor = colors?.right ?? '#4CAF50';
+  const leftColor = colors?.left ?? '#F44336';
+  const upColor = colors?.up ?? '#9E9E9E';
   const translateX = useSharedValue(0);
   const translateY = useSharedValue(0);
 
@@ -80,49 +89,112 @@ export function SwipeableCard({
     };
   });
 
-  const rightOpacity = useAnimatedStyle(() => {
+  const rightOverlayStyle = useAnimatedStyle(() => {
     const opacity = interpolate(
       translateX.value,
       [0, SWIPE_THRESHOLD_X],
-      [0, 1],
+      [0, 0.45],
       Extrapolation.CLAMP
     );
     return { opacity };
   });
 
-  const leftOpacity = useAnimatedStyle(() => {
+  const leftOverlayStyle = useAnimatedStyle(() => {
     const opacity = interpolate(
       translateX.value,
       [-SWIPE_THRESHOLD_X, 0],
-      [1, 0],
+      [0.45, 0],
       Extrapolation.CLAMP
     );
     return { opacity };
   });
 
-  const upOpacity = useAnimatedStyle(() => {
+  const upOverlayStyle = useAnimatedStyle(() => {
     const opacity = interpolate(
       translateY.value,
       [-SWIPE_THRESHOLD_Y, 0],
-      [1, 0],
+      [0.45, 0],
       Extrapolation.CLAMP
     );
     return { opacity };
+  });
+
+  const rightStampStyle = useAnimatedStyle(() => {
+    const opacity = interpolate(
+      translateX.value,
+      [0, SWIPE_THRESHOLD_X * 0.5, SWIPE_THRESHOLD_X],
+      [0, 0.5, 1],
+      Extrapolation.CLAMP
+    );
+    const scale = interpolate(
+      translateX.value,
+      [0, SWIPE_THRESHOLD_X],
+      [0.6, 1],
+      Extrapolation.CLAMP
+    );
+    return { opacity, transform: [{ scale }, { rotate: '-15deg' }] };
+  });
+
+  const leftStampStyle = useAnimatedStyle(() => {
+    const opacity = interpolate(
+      translateX.value,
+      [-SWIPE_THRESHOLD_X, -SWIPE_THRESHOLD_X * 0.5, 0],
+      [1, 0.5, 0],
+      Extrapolation.CLAMP
+    );
+    const scale = interpolate(
+      translateX.value,
+      [-SWIPE_THRESHOLD_X, 0],
+      [1, 0.6],
+      Extrapolation.CLAMP
+    );
+    return { opacity, transform: [{ scale }, { rotate: '15deg' }] };
+  });
+
+  const upStampStyle = useAnimatedStyle(() => {
+    const opacity = interpolate(
+      translateY.value,
+      [-SWIPE_THRESHOLD_Y, -SWIPE_THRESHOLD_Y * 0.5, 0],
+      [1, 0.5, 0],
+      Extrapolation.CLAMP
+    );
+    const scale = interpolate(
+      translateY.value,
+      [-SWIPE_THRESHOLD_Y, 0],
+      [1, 0.6],
+      Extrapolation.CLAMP
+    );
+    return { opacity, transform: [{ scale }] };
   });
 
   return (
     <GestureDetector gesture={panGesture}>
       <Animated.View style={[styles.container, cardStyle]}>
         <Card card={card} size="large" />
-        <Animated.View style={[styles.label, styles.rightLabel, rightOpacity]}>
-          <Text style={[styles.labelText, styles.rightLabelText]}>{labels.right}</Text>
+
+        {/* Color overlays on the card */}
+        <Animated.View style={[styles.overlay, { backgroundColor: rightColor }, rightOverlayStyle]} />
+        <Animated.View style={[styles.overlay, { backgroundColor: leftColor }, leftOverlayStyle]} />
+        {onSwipeUp && (
+          <Animated.View style={[styles.overlay, { backgroundColor: upColor }, upOverlayStyle]} />
+        )}
+
+        {/* Centered stamps */}
+        <Animated.View style={[styles.stampContainer, rightStampStyle]}>
+          <View style={[styles.stampBorder, { borderColor: '#fff', backgroundColor: rightColor + '80' }]}>
+            <Text style={[styles.stampText, { color: '#fff' }]} numberOfLines={1} adjustsFontSizeToFit>{labels.right}</Text>
+          </View>
         </Animated.View>
-        <Animated.View style={[styles.label, styles.leftLabel, leftOpacity]}>
-          <Text style={[styles.labelText, styles.leftLabelText]}>{labels.left}</Text>
+        <Animated.View style={[styles.stampContainer, leftStampStyle]}>
+          <View style={[styles.stampBorder, { borderColor: '#fff', backgroundColor: leftColor + '80' }]}>
+            <Text style={[styles.stampText, { color: '#fff' }]} numberOfLines={1} adjustsFontSizeToFit>{labels.left}</Text>
+          </View>
         </Animated.View>
         {onSwipeUp && labels.up && (
-          <Animated.View style={[styles.label, styles.upLabel, upOpacity]}>
-            <Text style={[styles.labelText, styles.upLabelText]}>{labels.up}</Text>
+          <Animated.View style={[styles.stampContainer, upStampStyle]}>
+            <View style={[styles.stampBorder, { borderColor: '#fff', backgroundColor: upColor + '80' }]}>
+              <Text style={[styles.stampText, { color: '#fff' }]} numberOfLines={1} adjustsFontSizeToFit>{labels.up}</Text>
+            </View>
           </Animated.View>
         )}
       </Animated.View>
@@ -134,39 +206,40 @@ const styles = StyleSheet.create({
   container: {
     position: 'absolute',
   },
-  label: {
+  overlay: {
     position: 'absolute',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 4,
-    borderWidth: 3,
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    borderRadius: 20,
   },
-  rightLabel: {
-    top: 40,
-    right: 20,
-    borderColor: '#4CAF50',
+  // Overlay colors are now applied inline via the colors prop
+  stampContainer: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
-  leftLabel: {
-    top: 40,
-    left: 20,
-    borderColor: '#F44336',
+  stampBorder: {
+    maxWidth: CARD_WIDTH * 0.85,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderWidth: 4,
+    borderRadius: 8,
   },
-  upLabel: {
-    top: 20,
-    alignSelf: 'center',
-    borderColor: '#9E9E9E',
+  // Stamp border colors are now applied inline via the colors prop
+  stampText: {
+    fontSize: 32,
+    fontWeight: '900',
+    textTransform: 'uppercase',
+    letterSpacing: 2,
+    textShadowColor: 'rgba(255, 255, 255, 0.8)',
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 6,
   },
-  labelText: {
-    fontSize: 18,
-    fontWeight: 'bold',
-  },
-  rightLabelText: {
-    color: '#4CAF50',
-  },
-  leftLabelText: {
-    color: '#F44336',
-  },
-  upLabelText: {
-    color: '#9E9E9E',
-  },
+  // Stamp text colors are now applied inline
 });

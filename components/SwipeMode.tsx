@@ -2,7 +2,6 @@ import React, { useCallback, useMemo } from 'react';
 import { StyleSheet, View, Text, Pressable, Image, Dimensions } from 'react-native';
 import { useCards, CARDS, CardData } from '@/context/CardContext';
 import { SwipeableCard } from '@/components/SwipeableCard';
-import { Card } from '@/components/Card';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const CARD_WIDTH = SCREEN_WIDTH * 0.7;
@@ -54,9 +53,36 @@ export function SwipeMode() {
     nextSwipeCard();
   }, [currentIndex, swipeFirstPass, nextSwipeCard]);
 
-  // Step 2 handlers
-  const handleStep2Choice = useCallback((value: number) => {
-    swipeSecondPass(currentStep2Card.id, value);
+  // Step 2 handlers - swipe-based refinement
+  const handleStep2SwipeRight = useCallback(() => {
+    if (!currentStep2Card) return;
+    const firstScore = state.swipeFirstPass[currentStep2Card.id];
+    if (firstScore === 1) {
+      // Favorable card: right = Très favorable (+2)
+      swipeSecondPass(currentStep2Card.id, 2);
+    } else {
+      // Unfavorable card: right = Défavorable (-1, less extreme)
+      swipeSecondPass(currentStep2Card.id, -1);
+    }
+    nextSwipeStep2Card();
+  }, [currentStep2Card, state.swipeFirstPass, swipeSecondPass, nextSwipeStep2Card]);
+
+  const handleStep2SwipeLeft = useCallback(() => {
+    if (!currentStep2Card) return;
+    const firstScore = state.swipeFirstPass[currentStep2Card.id];
+    if (firstScore === 1) {
+      // Favorable card: left = Favorable (+1, less extreme)
+      swipeSecondPass(currentStep2Card.id, 1);
+    } else {
+      // Unfavorable card: left = Très défavorable (-2)
+      swipeSecondPass(currentStep2Card.id, -2);
+    }
+    nextSwipeStep2Card();
+  }, [currentStep2Card, state.swipeFirstPass, swipeSecondPass, nextSwipeStep2Card]);
+
+  const handleStep2SwipeUp = useCallback(() => {
+    if (!currentStep2Card) return;
+    swipeSecondPass(currentStep2Card.id, 0); // Neutre
     nextSwipeStep2Card();
   }, [currentStep2Card, swipeSecondPass, nextSwipeStep2Card]);
 
@@ -68,21 +94,21 @@ export function SwipeMode() {
     resetSwipe();
   }, [resetSwipe]);
 
-  // Get the refinement options based on first pass score
-  const getStep2Options = (card: CardData) => {
-    const firstPassScore = state.swipeFirstPass[card.id];
-    if (firstPassScore === 1) {
-      return [
-        { label: 'Très favorable', value: 2, color: '#4CAF50' },
-        { label: 'Favorable', value: 1, color: '#8BC34A' },
-        { label: 'Neutre', value: 0, color: '#9E9E9E' },
-      ];
+  // Get swipe config for step 2 based on first pass score
+  const getStep2SwipeConfig = (card: CardData) => {
+    const firstScore = state.swipeFirstPass[card.id];
+    if (firstScore === 1) {
+      // Favorable card: deep green right, light green left
+      return {
+        labels: { right: 'Très favorable', left: 'Favorable', up: 'Neutre' },
+        colors: { right: '#2E7D32', left: '#8BC34A', up: '#9E9E9E' },
+      };
     } else {
-      return [
-        { label: 'Très défavorable', value: -2, color: '#F44336' },
-        { label: 'Défavorable', value: -1, color: '#FF9800' },
-        { label: 'Neutre', value: 0, color: '#9E9E9E' },
-      ];
+      // Unfavorable card: light red right, deep red left
+      return {
+        labels: { right: 'Défavorable', left: 'Très défavorable', up: 'Neutre' },
+        colors: { right: '#FF9800', left: '#C62828', up: '#9E9E9E' },
+      };
     }
   };
 
@@ -156,10 +182,13 @@ export function SwipeMode() {
   }
 
   // Render Step 2
+  const step2Config = currentStep2Card ? getStep2SwipeConfig(currentStep2Card) : null;
+  const nextStep2Card = step2Cards[step2Index + 1];
+
   return (
     <View style={styles.container}>
       <View style={styles.headerContainer}>
-        <Text style={styles.stepText}>Étape 2 sur 2</Text>
+        <Text style={styles.stepText}>Étape 2 sur 2 — Affiner</Text>
         <Text style={styles.progressText}>
           {isStep2Complete ? 'Terminé !' : `${step2Index + 1}/${step2Cards.length}`}
         </Text>
@@ -174,35 +203,39 @@ export function SwipeMode() {
             </Text>
           </View>
         ) : (
-          <Card card={currentStep2Card} size="large" />
+          <>
+            {nextStep2Card && (
+              <View style={styles.nextCard}>
+                <View style={styles.cardPreview}>
+                  <Image source={nextStep2Card.image} style={styles.previewImage} resizeMode="cover" />
+                </View>
+              </View>
+            )}
+            {currentStep2Card && step2Config && (
+              <SwipeableCard
+                key={currentStep2Card.id}
+                card={currentStep2Card}
+                onSwipeRight={handleStep2SwipeRight}
+                onSwipeLeft={handleStep2SwipeLeft}
+                onSwipeUp={handleStep2SwipeUp}
+                labels={step2Config.labels}
+                colors={step2Config.colors}
+              />
+            )}
+          </>
         )}
       </View>
 
-      {!isStep2Complete && currentStep2Card && (
-        <View style={styles.step2ButtonsContainer}>
-          <View style={styles.step2ButtonsRow}>
-            {getStep2Options(currentStep2Card).map((option) => (
-              <Pressable
-                key={option.value}
-                style={({ pressed }) => [
-                  styles.step2Button,
-                  { backgroundColor: option.color },
-                  pressed && styles.buttonPressed,
-                ]}
-                onPress={() => handleStep2Choice(option.value)}
-              >
-                <Text style={styles.step2ButtonText}>{option.label}</Text>
-              </Pressable>
-            ))}
-          </View>
-          <Text style={styles.step2Hint}>
-            Précédemment classé : {state.swipeFirstPass[currentStep2Card.id] === 1 ? 'Favorable' : 'Défavorable'}
-          </Text>
-        </View>
-      )}
+      <View style={styles.instructionsContainer}>
+        <Text style={styles.instructionText}>
+          {isStep2Complete ? '' : currentStep2Card && state.swipeFirstPass[currentStep2Card.id] === 1
+            ? 'Droite = Très favorable, Gauche = Favorable, Haut = Neutre'
+            : 'Droite = Défavorable, Gauche = Très défavorable, Haut = Neutre'}
+        </Text>
+      </View>
 
       <Pressable style={styles.resetButton} onPress={handleReset}>
-        <Text style={styles.resetButtonText}>Reset</Text>
+        <Text style={styles.resetButtonText}>Réinitialiser</Text>
       </Pressable>
     </View>
   );
@@ -288,36 +321,6 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: '#888',
     textAlign: 'center',
-  },
-  step2ButtonsContainer: {
-    width: '100%',
-    paddingHorizontal: 20,
-    marginBottom: 20,
-  },
-  step2ButtonsRow: {
-    flexDirection: 'column',
-    gap: 10,
-  },
-  step2Button: {
-    paddingVertical: 14,
-    paddingHorizontal: 20,
-    borderRadius: 8,
-    alignItems: 'center',
-  },
-  buttonPressed: {
-    opacity: 0.8,
-    transform: [{ scale: 0.98 }],
-  },
-  step2ButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  step2Hint: {
-    fontSize: 12,
-    color: '#888',
-    textAlign: 'center',
-    marginTop: 10,
   },
   resetButton: {
     backgroundColor: '#C4956A',
