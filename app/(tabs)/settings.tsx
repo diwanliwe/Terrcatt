@@ -1,16 +1,30 @@
 import React from 'react';
 import { StyleSheet, View, Text, ScrollView, Pressable, Linking } from 'react-native';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
+import { useRouter } from 'expo-router';
 
 const CONTACT_EMAIL = 'marianne.cohen@sorbonne-universite.fr';
 
 export default function SettingsScreen() {
+  const router = useRouter();
+
   const handleContact = () => {
     Linking.openURL(`mailto:${CONTACT_EMAIL}?subject=Projet Terrcatt – Prise de contact`);
   };
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent}>
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Introduction</Text>
+        <Pressable
+          style={({ pressed }) => [styles.onboardingButton, pressed && styles.onboardingButtonPressed]}
+          onPress={() => router.push('/onboarding')}
+        >
+          <FontAwesome name="play-circle" size={18} color="#C4956A" />
+          <Text style={styles.onboardingButtonText}>Voir l'introduction</Text>
+        </Pressable>
+      </View>
+
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>À propos</Text>
         <Text style={styles.paragraph}>
@@ -80,6 +94,26 @@ const styles = StyleSheet.create({
     lineHeight: 22,
     color: '#555',
     marginBottom: 10,
+  },
+  onboardingButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1.5,
+    borderColor: '#C4956A',
+    backgroundColor: '#FFF8F2',
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 8,
+    gap: 8,
+  },
+  onboardingButtonPressed: {
+    opacity: 0.7,
+  },
+  onboardingButtonText: {
+    color: '#C4956A',
+    fontSize: 16,
+    fontWeight: '600',
   },
   ctaBox: {
     borderWidth: 1.5,
