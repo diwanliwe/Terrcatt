@@ -9,9 +9,13 @@ import {
   Animated,
   Dimensions,
   ScrollView,
+  TextInput,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
-import { useCards, CARDS, CardData } from '@/context/CardContext';
+import { Audio } from 'expo-av';
+import { useCards, CARDS, CardData, CardComment } from '@/context/CardContext';
 import { Card } from '@/components/Card';
 
 const SCREEN_HEIGHT = Dimensions.get('window').height;
@@ -109,6 +113,8 @@ interface GroundTruthModalProps {
   groundTruthRank: number;
   groundTruthScore: number;
   explanation: string;
+  comment: CardComment | undefined;
+  onComment: (comment: CardComment) => void;
   onClose: () => void;
 }
 
@@ -120,9 +126,25 @@ function GroundTruthModal({
   groundTruthRank,
   groundTruthScore,
   explanation,
+  comment,
+  onComment,
   onClose,
 }: GroundTruthModalProps) {
   const slideAnim = useRef(new Animated.Value(SCREEN_HEIGHT)).current;
+  const [commentText, setCommentText] = useState('');
+  const [isRecording, setIsRecording] = useState(false);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [recordingDuration, setRecordingDuration] = useState(0);
+  const recordingRef = useRef<Audio.Recording | null>(null);
+  const soundRef = useRef<Audio.Sound | null>(null);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // Sync text with stored comment when card changes
+  useEffect(() => {
+    if (visible && card) {
+      setCommentText(comment?.text ?? '');
+    }
+  }, [visible, card?.id]);
 
   useEffect(() => {
     if (visible) {
@@ -137,12 +159,119 @@ function GroundTruthModal({
     }
   }, [visible]);
 
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (timerRef.current) clearInterval(timerRef.current);
+      soundRef.current?.unloadAsync();
+    };
+  }, []);
+
   const handleClose = () => {
+    // Save text comment if changed
+    if (card && (commentText.trim() !== (comment?.text ?? ''))) {
+      onComment({ text: commentText.trim(), audioUri: comment?.audioUri });
+    }
+    stopPlayback();
     Animated.timing(slideAnim, {
       toValue: SCREEN_HEIGHT,
       duration: 200,
       useNativeDriver: true,
     }).start(() => onClose());
+  };
+
+  const startRecording = async () => {
+    try {
+      const permission = await Audio.requestPermissionsAsync();
+      if (!permission.granted) return;
+
+      await Audio.setAudioModeAsync({
+        allowsRecordingIOS: true,
+        playsInSilentModeIOS: true,
+      });
+
+      const { recording } = await Audio.Recording.createAsync(
+        Audio.RecordingOptionsPresets.HIGH_QUALITY,
+      );
+      recordingRef.current = recording;
+      setIsRecording(true);
+      setRecordingDuration(0);
+      timerRef.current = setInterval(() => {
+        setRecordingDuration((d) => d + 1);
+      }, 1000);
+    } catch (err) {
+      console.error('Failed to start recording', err);
+    }
+  };
+
+  const stopRecording = async () => {
+    if (!recordingRef.current || !card) return;
+    try {
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
+      setIsRecording(false);
+      await recordingRef.current.stopAndUnloadAsync();
+      await Audio.setAudioModeAsync({ allowsRecordingIOS: false });
+      const uri = recordingRef.current.getURI();
+      recordingRef.current = null;
+      if (uri) {
+        onComment({ text: commentText.trim(), audioUri: uri });
+      }
+    } catch (err) {
+      console.error('Failed to stop recording', err);
+    }
+  };
+
+  const stopPlayback = async () => {
+    if (soundRef.current) {
+      await soundRef.current.stopAsync();
+      await soundRef.current.unloadAsync();
+      soundRef.current = null;
+    }
+    setIsPlaying(false);
+  };
+
+  const playAudio = async () => {
+    const uri = comment?.audioUri;
+    if (!uri) return;
+
+    if (isPlaying) {
+      await stopPlayback();
+      return;
+    }
+
+    try {
+      await Audio.setAudioModeAsync({ allowsRecordingIOS: false, playsInSilentModeIOS: true });
+      const { sound } = await Audio.Sound.createAsync({ uri });
+      soundRef.current = sound;
+      setIsPlaying(true);
+      sound.setOnPlaybackStatusUpdate((status) => {
+        if (status.isLoaded && status.didJustFinish) {
+          setIsPlaying(false);
+          sound.unloadAsync();
+          soundRef.current = null;
+        }
+      });
+      await sound.playAsync();
+    } catch (err) {
+      console.error('Failed to play audio', err);
+      setIsPlaying(false);
+    }
+  };
+
+  const deleteAudio = () => {
+    if (card) {
+      stopPlayback();
+      onComment({ text: commentText.trim(), audioUri: undefined });
+    }
+  };
+
+  const formatDuration = (seconds: number) => {
+    const m = Math.floor(seconds / 60);
+    const s = seconds % 60;
+    return `${m}:${s.toString().padStart(2, '0')}`;
   };
 
   if (!card) return null;
@@ -152,12 +281,17 @@ function GroundTruthModal({
   const gtScoreDisplay = groundTruthScore > 0 ? `+${groundTruthScore}` : `${groundTruthScore}`;
   const userColor = userScore !== undefined ? scoreToColor(userScore) : '#A0A0A0';
   const gtColor = scoreToColor(groundTruthScore);
+  const hasAudio = !!comment?.audioUri;
 
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={handleClose}>
-      <Pressable style={modalStyles.backdrop} onPress={handleClose}>
-        <Animated.View style={[modalStyles.sheet, { transform: [{ translateY: slideAnim }] }]}>
-          <Pressable onPress={(e) => e.stopPropagation()}>
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      >
+        <Pressable style={modalStyles.backdrop} onPress={handleClose}>
+          <Animated.View style={[modalStyles.sheet, { transform: [{ translateY: slideAnim }] }]}>
+            <Pressable onPress={(e) => e.stopPropagation()}>
             <View style={modalStyles.handle} />
 
             <Text style={modalStyles.title}>{card.name}</Text>
@@ -194,9 +328,73 @@ function GroundTruthModal({
               <Text style={modalStyles.explanationTitle}>Pourquoi ce classement terrain ?</Text>
               <Text style={modalStyles.explanationText}>{explanation}</Text>
             </ScrollView>
-          </Pressable>
-        </Animated.View>
-      </Pressable>
+
+            {/* Comment section */}
+            <View style={modalStyles.commentSection}>
+              <Text style={modalStyles.commentLabel}>Votre commentaire</Text>
+
+              <View style={modalStyles.commentInputRow}>
+                <TextInput
+                  style={modalStyles.commentInput}
+                  placeholder="Ajouter un commentaire..."
+                  placeholderTextColor="#999"
+                  value={commentText}
+                  onChangeText={setCommentText}
+                  onBlur={() => {
+                    if (card && commentText.trim() !== (comment?.text ?? '')) {
+                      onComment({ text: commentText.trim(), audioUri: comment?.audioUri });
+                    }
+                  }}
+                  multiline
+                  maxLength={500}
+                />
+
+                <Pressable
+                  onPress={isRecording ? stopRecording : startRecording}
+                  style={[
+                    modalStyles.micButton,
+                    isRecording && modalStyles.micButtonRecording,
+                  ]}
+                >
+                  <FontAwesome
+                    name={isRecording ? 'stop' : 'microphone'}
+                    size={18}
+                    color={isRecording ? '#fff' : '#C4956A'}
+                  />
+                </Pressable>
+              </View>
+
+              {isRecording && (
+                <View style={modalStyles.recordingIndicator}>
+                  <View style={modalStyles.recordingDot} />
+                  <Text style={modalStyles.recordingText}>
+                    Enregistrement... {formatDuration(recordingDuration)}
+                  </Text>
+                </View>
+              )}
+
+              {hasAudio && !isRecording && (
+                <View style={modalStyles.audioRow}>
+                  <Pressable onPress={playAudio} style={modalStyles.audioPlayButton}>
+                    <FontAwesome
+                      name={isPlaying ? 'pause' : 'play'}
+                      size={14}
+                      color="#fff"
+                    />
+                  </Pressable>
+                  <Text style={modalStyles.audioLabel}>
+                    {isPlaying ? 'Lecture en cours...' : 'Note vocale enregistrée'}
+                  </Text>
+                  <Pressable onPress={deleteAudio} style={modalStyles.audioDeleteButton}>
+                    <FontAwesome name="trash-o" size={16} color="#D9534F" />
+                  </Pressable>
+                </View>
+              )}
+            </View>
+            </Pressable>
+          </Animated.View>
+        </Pressable>
+      </KeyboardAvoidingView>
     </Modal>
   );
 }
@@ -221,7 +419,7 @@ const MODE_CONFIG = {
 // --- Main screen ---
 
 export default function ResultsScreen() {
-  const { state } = useCards();
+  const { state, setComment } = useCards();
   const { gameMode } = state;
   const config = MODE_CONFIG[gameMode];
 
@@ -274,6 +472,8 @@ export default function ResultsScreen() {
 
   const renderItem = ({ item, index }: { item: CardData; index: number }) => {
     const color = getRowColor(item);
+    const cardComment = state.comments[item.id];
+    const hasComment = cardComment && (cardComment.text || cardComment.audioUri);
 
     return (
       <Pressable
@@ -290,6 +490,9 @@ export default function ResultsScreen() {
           <Text style={styles.cardName}>{item.name}</Text>
           <Text style={styles.scoreText}>{formatScore(item)}</Text>
         </View>
+        {hasComment && (
+          <FontAwesome name="comment" size={14} color="#C4956A" style={{ marginRight: 4 }} />
+        )}
         <FontAwesome name="chevron-right" size={14} color="#C4956A" style={styles.chevron} />
       </Pressable>
     );
@@ -329,6 +532,10 @@ export default function ResultsScreen() {
         groundTruthRank={selectedGtRank}
         groundTruthScore={selectedGtScore}
         explanation={selectedExplanation}
+        comment={selectedCard ? state.comments[selectedCard.card.id] : undefined}
+        onComment={(c) => {
+          if (selectedCard) setComment(selectedCard.card.id, c);
+        }}
         onClose={() => setSelectedCard(null)}
       />
     </View>
@@ -420,7 +627,7 @@ const modalStyles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingBottom: 40,
     paddingTop: 12,
-    maxHeight: SCREEN_HEIGHT * 0.7,
+    maxHeight: SCREEN_HEIGHT * 0.85,
   },
   handle: {
     width: 40,
@@ -504,5 +711,91 @@ const modalStyles = StyleSheet.create({
     fontSize: 14,
     lineHeight: 22,
     color: '#555',
+  },
+  commentSection: {
+    marginTop: 20,
+    borderTopWidth: 1,
+    borderTopColor: '#E8E8E8',
+    paddingTop: 16,
+  },
+  commentLabel: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: '#333',
+    marginBottom: 10,
+  },
+  commentInputRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    gap: 10,
+  },
+  commentInput: {
+    flex: 1,
+    borderWidth: 1,
+    borderColor: '#DDD',
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    fontSize: 14,
+    color: '#333',
+    maxHeight: 80,
+    backgroundColor: '#FAFAFA',
+  },
+  micButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: '#FFF5EE',
+    borderWidth: 1,
+    borderColor: '#C4956A',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  micButtonRecording: {
+    backgroundColor: '#D9534F',
+    borderColor: '#D9534F',
+  },
+  recordingIndicator: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 8,
+    gap: 8,
+  },
+  recordingDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#D9534F',
+  },
+  recordingText: {
+    fontSize: 13,
+    color: '#D9534F',
+    fontWeight: '600',
+  },
+  audioRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 10,
+    backgroundColor: '#F5F0EB',
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    gap: 10,
+  },
+  audioPlayButton: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#C4956A',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  audioLabel: {
+    flex: 1,
+    fontSize: 13,
+    color: '#666',
+  },
+  audioDeleteButton: {
+    padding: 6,
   },
 });

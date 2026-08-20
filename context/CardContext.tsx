@@ -4,6 +4,11 @@ import { ImageSourcePropType } from 'react-native';
 // Types
 export type GameMode = 'swipe' | 'compare' | 'rate';
 
+export interface CardComment {
+  text: string;
+  audioUri?: string;
+}
+
 interface CardState {
   gameMode: GameMode;
   swipeScores: Record<number, number>;
@@ -15,6 +20,7 @@ interface CardState {
   ratingScores: Record<number, number>;
   currentRatingIndex: number;
   comparisonCount: number;
+  comments: Record<number, CardComment>;
 }
 
 type CardAction =
@@ -30,7 +36,8 @@ type CardAction =
   | { type: 'RESET_SWIPE' }
   | { type: 'RESET_COMPARE' }
   | { type: 'RESET_RATING' }
-  | { type: 'NEXT_RATING_CARD' };
+  | { type: 'NEXT_RATING_CARD' }
+  | { type: 'SET_COMMENT'; cardId: number; comment: CardComment };
 
 interface CardContextType {
   state: CardState;
@@ -47,6 +54,7 @@ interface CardContextType {
   resetRating: () => void;
   nextRatingCard: () => void;
   setGameMode: (mode: GameMode) => void;
+  setComment: (cardId: number, comment: CardComment) => void;
 }
 
 // Initial state
@@ -61,6 +69,7 @@ const initialState: CardState = {
   ratingScores: {},
   currentRatingIndex: 0,
   comparisonCount: 0,
+  comments: {},
 };
 
 // Reducer
@@ -156,6 +165,14 @@ function cardReducer(state: CardState, action: CardAction): CardState {
         ratingScores: {},
         currentRatingIndex: 0,
       };
+    case 'SET_COMMENT':
+      return {
+        ...state,
+        comments: {
+          ...state.comments,
+          [action.cardId]: action.comment,
+        },
+      };
     default:
       return state;
   }
@@ -220,6 +237,10 @@ export function CardProvider({ children }: { children: ReactNode }) {
     dispatch({ type: 'SET_GAME_MODE', mode });
   };
 
+  const setComment = (cardId: number, comment: CardComment) => {
+    dispatch({ type: 'SET_COMMENT', cardId, comment });
+  };
+
   return (
     <CardContext.Provider
       value={{
@@ -237,6 +258,7 @@ export function CardProvider({ children }: { children: ReactNode }) {
         resetRating,
         nextRatingCard,
         setGameMode,
+        setComment,
       }}
     >
       {children}
