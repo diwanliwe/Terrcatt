@@ -1,18 +1,23 @@
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   StyleSheet,
   View,
   Text,
   Image,
   Pressable,
-  FlatList,
+  ScrollView,
   useWindowDimensions,
-  NativeSyntheticEvent,
-  NativeScrollEvent,
 } from 'react-native';
 import { useRouter } from 'expo-router';
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withTiming,
+  withSequence,
+  withDelay,
+} from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { CARDS } from '@/context/CardContext';
+import { CARDS, useCards, UserProfile, ProfileRole } from '@/context/CardContext';
 import { MAX_LAYOUT_WIDTH } from '@/components/Card';
 
 const RATING_DOTS = [
@@ -23,150 +28,310 @@ const RATING_DOTS = [
   { score: '+2', color: '#4CAF50' },
 ];
 
-interface OnboardingPage {
-  key: string;
-  title: string;
-  body: string;
-  imageCardId?: number;
-  showRatingScale?: boolean;
+interface QuestionOption {
+  value: string;
+  emoji: string;
+  label: string;
 }
 
-const PAGES: OnboardingPage[] = [
-  {
-    key: 'welcome',
-    title: 'Bienvenue sur Terrcatt',
-    body:
-      "En octobre 2020, la tempête Alex a dévasté la vallée de la Roya. " +
-      "Ce projet de recherche participatif étudie comment les terrasses de culture " +
-      "peuvent aider le territoire à se reconstruire.",
-    imageCardId: 14, // Terrasses
-  },
-  {
-    key: 'heritage',
-    title: 'Un patrimoine à réhabiliter',
-    body:
-      "La vallée compte près de 23 000 terrasses agricoles, aujourd'hui largement abandonnées. " +
-      "Les recherches montrent qu'elles renforcent la résilience du territoire face aux " +
-      "événements climatiques extrêmes.",
-    imageCardId: 5, // Abandon
-  },
-  {
-    key: 'rate',
-    title: 'Notez 15 cartes',
-    body:
-      "Chaque carte présente une caractéristique du paysage. Indiquez si elle vous semble " +
-      "favorable ou défavorable à la réhabilitation des terrasses, de −2 à +2.",
-    imageCardId: 1, // Olivier Murette
-    showRatingScale: true,
-  },
-  {
-    key: 'results',
-    title: 'Comparez votre regard',
-    body:
-      "Retrouvez votre classement dans l'onglet Résultats et comparez-le à la « vérité terrain » " +
-      "établie par les scientifiques. Votre perception nourrit la recherche.",
-    imageCardId: 12, // Stockage Eau
-  },
+const ROLE_OPTIONS: QuestionOption[] = [
+  { value: 'owner', emoji: '🏡', label: 'Propriétaire de terrasses ou de terrain' },
+  { value: 'public-actor', emoji: '🏛️', label: 'Élu·e ou acteur public' },
+  { value: 'researcher', emoji: '🔬', label: 'Chercheur·se ou étudiant·e' },
+  { value: 'agri-professional', emoji: '🚜', label: "Professionnel·le de l'agriculture ou du paysage" },
+  { value: 'resident', emoji: '🏘️', label: 'Habitant·e de la vallée' },
+  { value: 'curious', emoji: '👀', label: 'Curieux·se — autre' },
 ];
+
+const TERRITORY_OPTIONS: QuestionOption[] = [
+  { value: 'roya', emoji: '📍', label: "J'habite ou je connais bien la vallée de la Roya" },
+  { value: 'similar-territory', emoji: '🌍', label: 'Mon territoire fait face à des défis similaires' },
+  { value: 'no-link', emoji: '🗺️', label: 'Aucun lien particulier, je découvre' },
+];
+
+const SOURCE_OPTIONS: QuestionOption[] = [
+  { value: 'word-of-mouth', emoji: '💬', label: 'Bouche à oreille' },
+  { value: 'event', emoji: '🎪', label: 'Un atelier ou événement du projet' },
+  { value: 'social-media', emoji: '📱', label: 'Réseaux sociaux' },
+  { value: 'press', emoji: '📰', label: 'Presse ou média' },
+  { value: 'online-search', emoji: '🔎', label: 'Recherche en ligne' },
+  { value: 'other', emoji: '✨', label: 'Autre' },
+];
+
+const DOT_CYCLE_MS = 2200;
+
+function AnimatedRatingDot({
+  dot,
+  active,
+}: {
+  dot: { score: string; color: string };
+  active: boolean;
+}) {
+  const scale = useSharedValue(1);
+
+  useEffect(() => {
+    if (active) {
+      // Gentle pulse: grow, hold briefly, settle back — fully done before the next dot starts.
+      scale.value = withSequence(
+        withTiming(1.25, { duration: 280 }),
+        withDelay(350, withTiming(1, { duration: 280 }))
+      );
+    }
+  }, [active, scale]);
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: scale.value }],
+  }));
+
+  return (
+    <Animated.View style={[styles.ratingDot, { backgroundColor: dot.color }, animatedStyle]}>
+      <Text style={styles.ratingDotText}>{dot.score}</Text>
+    </Animated.View>
+  );
+}
+
+function AnimatedRatingScale() {
+  const [activeIndex, setActiveIndex] = useState(0);
+
+  useEffect(() => {
+    const id = setInterval(() => {
+      setActiveIndex((prev) => {
+        // Random pick, but never the same dot twice in a row
+        const next = Math.floor(Math.random() * RATING_DOTS.length);
+        return next === prev ? (next + 1) % RATING_DOTS.length : next;
+      });
+    }, DOT_CYCLE_MS);
+    return () => clearInterval(id);
+  }, []);
+
+  return (
+    <View style={styles.ratingScaleRow}>
+      {RATING_DOTS.map((dot, i) => (
+        <AnimatedRatingDot key={dot.score} dot={dot} active={i === activeIndex} />
+      ))}
+    </View>
+  );
+}
+
+type StepKey = 'hook' | 'role' | 'territory' | 'source' | 'bridge';
+
+const STEPS: StepKey[] = ['hook', 'role', 'territory', 'source', 'bridge'];
 
 export default function OnboardingScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { width } = useWindowDimensions();
-  const listRef = useRef<FlatList<OnboardingPage>>(null);
-  const [pageIndex, setPageIndex] = useState(0);
+  const { state, setProfile } = useCards();
+  const [stepIndex, setStepIndex] = useState(0);
 
   const contentWidth = Math.min(width, MAX_LAYOUT_WIDTH);
   const imageSize = contentWidth * 0.55;
-  const isLastPage = pageIndex === PAGES.length - 1;
-
-  const handleScroll = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
-    const index = Math.round(e.nativeEvent.contentOffset.x / width);
-    if (index !== pageIndex && index >= 0 && index < PAGES.length) {
-      setPageIndex(index);
-    }
-  };
+  const step = STEPS[stepIndex];
+  const isLastStep = stepIndex === STEPS.length - 1;
 
   const handleClose = () => {
     router.back();
   };
 
-  const handleNext = () => {
-    if (isLastPage) {
+  const goNext = () => {
+    if (isLastStep) {
       handleClose();
     } else {
-      listRef.current?.scrollToIndex({ index: pageIndex + 1, animated: true });
+      setStepIndex(stepIndex + 1);
     }
   };
 
-  const renderPage = ({ item }: { item: OnboardingPage }) => {
-    const cardImage = item.imageCardId
-      ? CARDS.find((c) => c.id === item.imageCardId)?.image
-      : undefined;
-
-    return (
-      <View style={[styles.page, { width }]}>
-        <View style={[styles.pageContent, { maxWidth: MAX_LAYOUT_WIDTH }]}>
-          {cardImage && (
-            <View style={[styles.imageFrame, { width: imageSize, height: imageSize }]}>
-              <Image source={cardImage} style={styles.image} resizeMode="cover" />
-            </View>
-          )}
-
-          {item.showRatingScale && (
-            <View style={styles.ratingScaleRow}>
-              {RATING_DOTS.map((dot) => (
-                <View key={dot.score} style={[styles.ratingDot, { backgroundColor: dot.color }]}>
-                  <Text style={styles.ratingDotText}>{dot.score}</Text>
-                </View>
-              ))}
-            </View>
-          )}
-
-          <Text style={styles.title}>{item.title}</Text>
-          <Text style={styles.body}>{item.body}</Text>
-        </View>
-      </View>
-    );
+  const goBack = () => {
+    if (stepIndex > 0) {
+      setStepIndex(stepIndex - 1);
+    }
   };
+
+  const toggleRole = (value: string) => {
+    const role = value as ProfileRole;
+    const roles = state.profile.roles.includes(role)
+      ? state.profile.roles.filter((r) => r !== role)
+      : [...state.profile.roles, role];
+    setProfile({ roles });
+  };
+
+  const selectSingle = (field: 'territoryLink' | 'source', value: string) => {
+    setProfile({ [field]: value } as Partial<UserProfile>);
+  };
+
+  const renderOptions = (
+    options: QuestionOption[],
+    selectedValues: string[],
+    onToggle: (value: string) => void
+  ) => (
+    <View style={styles.optionsList}>
+      {options.map((option) => {
+        const selected = selectedValues.includes(option.value);
+        return (
+          <Pressable
+            key={option.value}
+            style={({ pressed }) => [
+              styles.optionCard,
+              selected && styles.optionCardSelected,
+              pressed && styles.optionCardPressed,
+            ]}
+            onPress={() => onToggle(option.value)}
+          >
+            <Text style={styles.optionEmoji}>{option.emoji}</Text>
+            <Text style={[styles.optionLabel, selected && styles.optionLabelSelected]}>
+              {option.label}
+            </Text>
+          </Pressable>
+        );
+      })}
+    </View>
+  );
+
+  const renderStep = () => {
+    switch (step) {
+      case 'hook': {
+        const image = CARDS.find((c) => c.id === 14)?.image;
+        return (
+          <View style={styles.narrativePage}>
+            {image && (
+              <View style={[styles.imageFrame, { width: imageSize, height: imageSize }]}>
+                <Image source={image} style={styles.image} resizeMode="cover" />
+              </View>
+            )}
+            <Text style={styles.title}>Bienvenue sur Terrcatt</Text>
+            <Text style={styles.body}>
+              En octobre 2020, la tempête Alex a dévasté la vallée de la Roya. Ses 23 000
+              terrasses de culture, largement abandonnées, pourraient être une clé de la
+              reconstruction. Ce projet de recherche participatif (Sorbonne Université) a
+              besoin de votre regard.
+            </Text>
+          </View>
+        );
+      }
+      case 'role':
+        return (
+          <View style={styles.questionPage}>
+            <Text style={styles.title}>Qui êtes-vous ?</Text>
+            <Text style={styles.subtitle}>
+              Votre profil nous aide à comparer les regards sur le paysage.
+            </Text>
+            {renderOptions(ROLE_OPTIONS, state.profile.roles, toggleRole)}
+            <Text style={styles.optionsHint}>Plusieurs réponses possibles</Text>
+          </View>
+        );
+      case 'territory':
+        return (
+          <View style={styles.questionPage}>
+            <Text style={styles.title}>Quel est votre lien avec le territoire ?</Text>
+            {renderOptions(
+              TERRITORY_OPTIONS,
+              state.profile.territoryLink ? [state.profile.territoryLink] : [],
+              (value) => selectSingle('territoryLink', value)
+            )}
+          </View>
+        );
+      case 'source':
+        return (
+          <View style={styles.questionPage}>
+            <Text style={styles.title}>Comment avez-vous découvert Terrcatt ?</Text>
+            {renderOptions(
+              SOURCE_OPTIONS,
+              state.profile.source ? [state.profile.source] : [],
+              (value) => selectSingle('source', value)
+            )}
+          </View>
+        );
+      case 'bridge':
+        return (
+          <View style={styles.narrativePage}>
+            <AnimatedRatingScale />
+            <Text style={styles.title}>À vous de jouer</Text>
+
+            <View style={styles.bulletList}>
+              <View style={styles.bulletRow}>
+                <Text style={styles.bulletEmoji}>🃏</Text>
+                <Text style={styles.bulletText}>
+                  15 cartes, chacune une caractéristique du paysage de la Roya.
+                </Text>
+              </View>
+
+              <View style={styles.bulletRow}>
+                <Text style={styles.bulletEmoji}>🗳️</Text>
+                <Text style={styles.bulletText}>
+                  Votez : favorable ou défavorable à la réhabilitation des terrasses ?
+                </Text>
+              </View>
+
+              <View style={styles.bulletRow}>
+                <Text style={styles.bulletEmoji}>🔭</Text>
+                <Text style={styles.bulletText}>
+                  À la fin, explorez vos résultats et découvrez l'étude scientifique.
+                </Text>
+              </View>
+            </View>
+
+            <View style={styles.noteBox}>
+              <Text style={styles.noteText}>
+                Il n'y a pas de mauvaise réponse : ce jeu croise ce que pensent les
+                participants avec ce que dit la science.
+              </Text>
+            </View>
+          </View>
+        );
+    }
+  };
+
+  const stepAnswered = (() => {
+    switch (step) {
+      case 'role':
+        return state.profile.roles.length > 0;
+      case 'territory':
+        return state.profile.territoryLink !== null;
+      case 'source':
+        return state.profile.source !== null;
+      default:
+        return true;
+    }
+  })();
+
+  const buttonLabel = step === 'bridge' ? 'Commencer' : step === 'hook' ? 'Suivant' : 'Valider';
 
   return (
     <View style={[styles.container, { paddingTop: insets.top, paddingBottom: insets.bottom + 20 }]}>
       <View style={styles.header}>
-        <Pressable onPress={handleClose} hitSlop={10}>
-          <Text style={styles.skipText}>Passer</Text>
-        </Pressable>
+        {stepIndex > 0 ? (
+          <Pressable onPress={goBack} hitSlop={10}>
+            <Text style={styles.backText}>← Retour</Text>
+          </Pressable>
+        ) : (
+          <View />
+        )}
       </View>
 
-      <FlatList
-        ref={listRef}
-        data={PAGES}
-        keyExtractor={(page) => page.key}
-        renderItem={renderPage}
-        horizontal
-        pagingEnabled
-        showsHorizontalScrollIndicator={false}
-        onMomentumScrollEnd={handleScroll}
-        onScroll={handleScroll}
-        scrollEventThrottle={64}
-        getItemLayout={(_, index) => ({ length: width, offset: width * index, index })}
-      />
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={[styles.stepContainer, { maxWidth: MAX_LAYOUT_WIDTH }]}>{renderStep()}</View>
+      </ScrollView>
 
       <View style={styles.footer}>
         <View style={styles.dotsRow}>
-          {PAGES.map((page, i) => (
-            <View
-              key={page.key}
-              style={[styles.dot, i === pageIndex && styles.dotActive]}
-            />
+          {STEPS.map((key, i) => (
+            <View key={key} style={[styles.dot, i === stepIndex && styles.dotActive]} />
           ))}
         </View>
 
         <Pressable
-          style={({ pressed }) => [styles.nextButton, pressed && styles.nextButtonPressed]}
-          onPress={handleNext}
+          style={({ pressed }) => [
+            styles.nextButton,
+            !stepAnswered && styles.nextButtonDisabled,
+            pressed && stepAnswered && styles.nextButtonPressed,
+          ]}
+          onPress={goNext}
+          disabled={!stepAnswered}
         >
-          <Text style={styles.nextButtonText}>{isLastPage ? 'Commencer' : 'Suivant'}</Text>
+          <Text style={styles.nextButtonText}>{buttonLabel}</Text>
         </Pressable>
       </View>
     </View>
@@ -180,23 +345,34 @@ const styles = StyleSheet.create({
   },
   header: {
     flexDirection: 'row',
-    justifyContent: 'flex-end',
+    justifyContent: 'flex-start',
     paddingHorizontal: 20,
     paddingVertical: 12,
+    minHeight: 44,
   },
-  skipText: {
+  backText: {
     fontSize: 15,
     fontWeight: '600',
     color: '#C4956A',
   },
-  page: {
+  scrollContent: {
+    flexGrow: 1,
+    alignItems: 'center',
+  },
+  stepContainer: {
+    flex: 1,
+    width: '100%',
+    paddingHorizontal: 28,
+  },
+  narrativePage: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: 28,
   },
-  pageContent: {
+  questionPage: {
+    flex: 1,
     alignItems: 'center',
+    paddingTop: 8,
   },
   imageFrame: {
     borderRadius: 24,
@@ -213,7 +389,47 @@ const styles = StyleSheet.create({
   ratingScaleRow: {
     flexDirection: 'row',
     gap: 10,
-    marginBottom: 24,
+    alignSelf: 'center',
+    marginBottom: 28,
+    paddingVertical: 8,
+  },
+  bulletList: {
+    width: '100%',
+    gap: 18,
+    marginTop: 10,
+    marginBottom: 28,
+  },
+  bulletRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 14,
+  },
+  bulletEmoji: {
+    fontSize: 38,
+    lineHeight: 46,
+    width: 48,
+    textAlign: 'center',
+  },
+  bulletText: {
+    flex: 1,
+    fontSize: 16,
+    lineHeight: 23,
+    color: '#555',
+  },
+  noteBox: {
+    width: '100%',
+    backgroundColor: '#FAF3EC',
+    borderRadius: 14,
+    borderWidth: 1.5,
+    borderColor: '#E8D9C8',
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+  },
+  noteText: {
+    fontSize: 15,
+    lineHeight: 22,
+    color: '#8A6240',
+    textAlign: 'center',
   },
   ratingDot: {
     width: 44,
@@ -225,7 +441,10 @@ const styles = StyleSheet.create({
   ratingDotText: {
     color: '#fff',
     fontSize: 14,
+    lineHeight: 14,
     fontWeight: '700',
+    textAlign: 'center',
+    includeFontPadding: false,
   },
   title: {
     fontSize: 24,
@@ -234,15 +453,87 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginBottom: 14,
   },
+  subtitle: {
+    fontSize: 15,
+    lineHeight: 22,
+    color: '#777',
+    textAlign: 'center',
+    marginBottom: 10,
+  },
   body: {
     fontSize: 16,
     lineHeight: 24,
     color: '#555',
     textAlign: 'center',
   },
+  optionsList: {
+    width: '100%',
+    gap: 10,
+    marginTop: 12,
+  },
+  optionsHint: {
+    fontSize: 13,
+    color: '#999',
+    textAlign: 'center',
+    marginTop: 12,
+    fontStyle: 'italic',
+  },
+  optionCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    minHeight: 56,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderRadius: 14,
+    borderWidth: 1.5,
+    borderColor: '#DEDDDA',
+    backgroundColor: '#FFFFFF',
+    gap: 12,
+  },
+  optionCardSelected: {
+    borderColor: '#C4956A',
+    backgroundColor: '#FAF3EC',
+  },
+  optionCardPressed: {
+    opacity: 0.85,
+  },
+  optionEmoji: {
+    fontSize: 22,
+  },
+  optionLabel: {
+    flex: 1,
+    fontSize: 15,
+    lineHeight: 21,
+    color: '#444',
+    fontWeight: '500',
+  },
+  optionLabelSelected: {
+    color: '#8A6240',
+    fontWeight: '600',
+  },
+  nextButton: {
+    backgroundColor: '#C4956A',
+    paddingHorizontal: 48,
+    paddingVertical: 14,
+    borderRadius: 10,
+    minWidth: 220,
+    alignItems: 'center',
+  },
+  nextButtonPressed: {
+    opacity: 0.8,
+  },
+  nextButtonDisabled: {
+    backgroundColor: '#E0D5C9',
+  },
+  nextButtonText: {
+    color: '#fff',
+    fontSize: 17,
+    fontWeight: '600',
+  },
   footer: {
     alignItems: 'center',
     paddingHorizontal: 28,
+    paddingTop: 16,
     gap: 20,
   },
   dotsRow: {
@@ -258,21 +549,5 @@ const styles = StyleSheet.create({
   dotActive: {
     backgroundColor: '#C4956A',
     width: 20,
-  },
-  nextButton: {
-    backgroundColor: '#C4956A',
-    paddingHorizontal: 48,
-    paddingVertical: 14,
-    borderRadius: 10,
-    minWidth: 220,
-    alignItems: 'center',
-  },
-  nextButtonPressed: {
-    opacity: 0.8,
-  },
-  nextButtonText: {
-    color: '#fff',
-    fontSize: 17,
-    fontWeight: '600',
   },
 });

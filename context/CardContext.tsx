@@ -9,6 +9,30 @@ export interface CardComment {
   audioUri?: string;
 }
 
+export type ProfileRole =
+  | 'owner'
+  | 'public-actor'
+  | 'researcher'
+  | 'agri-professional'
+  | 'resident'
+  | 'curious';
+
+export type TerritoryLink = 'roya' | 'similar-territory' | 'no-link';
+
+export type AcquisitionSource =
+  | 'word-of-mouth'
+  | 'event'
+  | 'social-media'
+  | 'press'
+  | 'online-search'
+  | 'other';
+
+export interface UserProfile {
+  roles: ProfileRole[];
+  territoryLink: TerritoryLink | null;
+  source: AcquisitionSource | null;
+}
+
 interface CardState {
   gameMode: GameMode;
   swipeScores: Record<number, number>;
@@ -21,6 +45,7 @@ interface CardState {
   currentRatingIndex: number;
   comparisonCount: number;
   comments: Record<number, CardComment>;
+  profile: UserProfile;
 }
 
 type CardAction =
@@ -37,7 +62,8 @@ type CardAction =
   | { type: 'RESET_COMPARE' }
   | { type: 'RESET_RATING' }
   | { type: 'NEXT_RATING_CARD' }
-  | { type: 'SET_COMMENT'; cardId: number; comment: CardComment };
+  | { type: 'SET_COMMENT'; cardId: number; comment: CardComment }
+  | { type: 'SET_PROFILE'; profile: Partial<UserProfile> };
 
 interface CardContextType {
   state: CardState;
@@ -55,6 +81,7 @@ interface CardContextType {
   nextRatingCard: () => void;
   setGameMode: (mode: GameMode) => void;
   setComment: (cardId: number, comment: CardComment) => void;
+  setProfile: (profile: Partial<UserProfile>) => void;
 }
 
 // Initial state
@@ -70,6 +97,11 @@ const initialState: CardState = {
   currentRatingIndex: 0,
   comparisonCount: 0,
   comments: {},
+  profile: {
+    roles: [],
+    territoryLink: null,
+    source: null,
+  },
 };
 
 // Reducer
@@ -173,6 +205,14 @@ function cardReducer(state: CardState, action: CardAction): CardState {
           [action.cardId]: action.comment,
         },
       };
+    case 'SET_PROFILE':
+      return {
+        ...state,
+        profile: {
+          ...state.profile,
+          ...action.profile,
+        },
+      };
     default:
       return state;
   }
@@ -241,6 +281,10 @@ export function CardProvider({ children }: { children: ReactNode }) {
     dispatch({ type: 'SET_COMMENT', cardId, comment });
   };
 
+  const setProfile = (profile: Partial<UserProfile>) => {
+    dispatch({ type: 'SET_PROFILE', profile });
+  };
+
   return (
     <CardContext.Provider
       value={{
@@ -259,6 +303,7 @@ export function CardProvider({ children }: { children: ReactNode }) {
         nextRatingCard,
         setGameMode,
         setComment,
+        setProfile,
       }}
     >
       {children}
