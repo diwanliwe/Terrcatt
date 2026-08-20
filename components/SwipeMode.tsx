@@ -1,13 +1,11 @@
 import React, { useCallback, useMemo } from 'react';
-import { StyleSheet, View, Text, Pressable, Image, Dimensions } from 'react-native';
+import { StyleSheet, View, Text, Pressable, Image } from 'react-native';
 import { useCards, CARDS, CardData } from '@/context/CardContext';
 import { SwipeableCard } from '@/components/SwipeableCard';
-
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
-const CARD_WIDTH = SCREEN_WIDTH * 0.7;
-const CARD_HEIGHT = CARD_WIDTH * 1.1;
+import { useCardSize } from '@/components/Card';
 
 export function SwipeMode() {
+  const { cardWidth, cardHeight } = useCardSize();
   const {
     state,
     swipeFirstPass,
@@ -158,7 +156,7 @@ export function SwipeMode() {
                   }
                   return (
                     <View key={card.id} style={styles.nextCard}>
-                      <View style={styles.cardPreview}>
+                      <View style={[styles.cardPreview, { width: cardWidth, height: cardHeight }]}>
                         <Image source={card.image} style={styles.previewImage} resizeMode="cover" />
                       </View>
                     </View>
@@ -206,7 +204,7 @@ export function SwipeMode() {
           <>
             {nextStep2Card && (
               <View style={styles.nextCard}>
-                <View style={styles.cardPreview}>
+                <View style={[styles.cardPreview, { width: cardWidth, height: cardHeight }]}>
                   <Image source={nextStep2Card.image} style={styles.previewImage} resizeMode="cover" />
                 </View>
               </View>
@@ -274,8 +272,6 @@ const styles = StyleSheet.create({
     opacity: 0.7,
   },
   cardPreview: {
-    width: CARD_WIDTH,
-    height: CARD_HEIGHT,
     backgroundColor: '#000',
     borderRadius: 20,
     overflow: 'hidden',

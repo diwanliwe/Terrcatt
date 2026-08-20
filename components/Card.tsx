@@ -1,10 +1,15 @@
 import React from 'react';
-import { View, Text, StyleSheet, ViewStyle, Image, Dimensions } from 'react-native';
+import { View, Text, StyleSheet, ViewStyle, Image, useWindowDimensions } from 'react-native';
 import { CardData } from '@/context/CardContext';
 
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
-const LARGE_WIDTH = SCREEN_WIDTH * 0.7;
-const LARGE_HEIGHT = LARGE_WIDTH * 1.1;
+// Cap the reference width so cards stay phone-sized on desktop browsers
+export const MAX_LAYOUT_WIDTH = 500;
+
+export function useCardSize() {
+  const { width } = useWindowDimensions();
+  const cardWidth = Math.min(width, MAX_LAYOUT_WIDTH) * 0.7;
+  return { cardWidth, cardHeight: cardWidth * 1.1 };
+}
 
 interface CardProps {
   card: CardData;
@@ -14,10 +19,11 @@ interface CardProps {
 }
 
 export function Card({ card, style, size = 'normal', rank }: CardProps) {
+  const { cardWidth, cardHeight } = useCardSize();
   const shadowStyle =
     size === 'small' ? styles.shadowSmall :
     size === 'medium' ? styles.shadowMedium :
-    size === 'large' ? styles.shadowLarge : null;
+    size === 'large' ? [styles.shadowLarge, { width: cardWidth, height: cardHeight }] : null;
   const innerStyle =
     size === 'small' ? styles.innerSmall :
     size === 'medium' ? styles.innerMedium :
@@ -74,8 +80,6 @@ const styles = StyleSheet.create({
     borderRadius: 12,
   },
   shadowLarge: {
-    width: LARGE_WIDTH,
-    height: LARGE_HEIGHT,
     borderRadius: 20,
   },
   innerLarge: {

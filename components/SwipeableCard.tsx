@@ -1,5 +1,5 @@
 import React from 'react';
-import { StyleSheet, Dimensions, View, Text } from 'react-native';
+import { StyleSheet, View, Text, useWindowDimensions } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
   useSharedValue,
@@ -10,14 +10,10 @@ import Animated, {
   interpolate,
   Extrapolation,
 } from 'react-native-reanimated';
-import { Card } from './Card';
+import { Card, MAX_LAYOUT_WIDTH, useCardSize } from './Card';
 import { CardData } from '@/context/CardContext';
 
-const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
-const SWIPE_THRESHOLD_X = SCREEN_WIDTH * 0.25;
 const SWIPE_THRESHOLD_Y = 100;
-const CARD_WIDTH = SCREEN_WIDTH * 0.7;
-const CARD_HEIGHT = CARD_WIDTH * 1.1;
 
 interface SwipeableCardProps {
   card: CardData;
@@ -47,6 +43,9 @@ export function SwipeableCard({
   const rightColor = colors?.right ?? '#4CAF50';
   const leftColor = colors?.left ?? '#F44336';
   const upColor = colors?.up ?? '#9E9E9E';
+  const { width: screenWidth, height: screenHeight } = useWindowDimensions();
+  const { cardWidth } = useCardSize();
+  const SWIPE_THRESHOLD_X = Math.min(screenWidth, MAX_LAYOUT_WIDTH) * 0.25;
   const translateX = useSharedValue(0);
   const translateY = useSharedValue(0);
 
@@ -58,13 +57,13 @@ export function SwipeableCard({
     .onEnd((event) => {
       // Check for swipe up first (if enabled)
       if (onSwipeUp && event.translationY < -SWIPE_THRESHOLD_Y && Math.abs(event.translationX) < SWIPE_THRESHOLD_X) {
-        translateY.value = withTiming(-SCREEN_HEIGHT, { duration: 300 });
+        translateY.value = withTiming(-screenHeight, { duration: 300 });
         runOnJS(onSwipeUp)();
       } else if (event.translationX > SWIPE_THRESHOLD_X) {
-        translateX.value = withTiming(SCREEN_WIDTH * 1.5, { duration: 300 });
+        translateX.value = withTiming(screenWidth * 1.5, { duration: 300 });
         runOnJS(onSwipeRight)();
       } else if (event.translationX < -SWIPE_THRESHOLD_X) {
-        translateX.value = withTiming(-SCREEN_WIDTH * 1.5, { duration: 300 });
+        translateX.value = withTiming(-screenWidth * 1.5, { duration: 300 });
         runOnJS(onSwipeLeft)();
       } else {
         translateX.value = withSpring(0);
@@ -75,7 +74,7 @@ export function SwipeableCard({
   const cardStyle = useAnimatedStyle(() => {
     const rotate = interpolate(
       translateX.value,
-      [-SCREEN_WIDTH / 2, 0, SCREEN_WIDTH / 2],
+      [-screenWidth / 2, 0, screenWidth / 2],
       [-15, 0, 15],
       Extrapolation.CLAMP
     );
@@ -181,18 +180,18 @@ export function SwipeableCard({
 
         {/* Centered stamps */}
         <Animated.View style={[styles.stampContainer, rightStampStyle]}>
-          <View style={[styles.stampBorder, { borderColor: '#fff', backgroundColor: rightColor + '80' }]}>
+          <View style={[styles.stampBorder, { maxWidth: cardWidth * 0.85, borderColor: '#fff', backgroundColor: rightColor + '80' }]}>
             <Text style={[styles.stampText, { color: '#fff' }]} numberOfLines={1} adjustsFontSizeToFit>{labels.right}</Text>
           </View>
         </Animated.View>
         <Animated.View style={[styles.stampContainer, leftStampStyle]}>
-          <View style={[styles.stampBorder, { borderColor: '#fff', backgroundColor: leftColor + '80' }]}>
+          <View style={[styles.stampBorder, { maxWidth: cardWidth * 0.85, borderColor: '#fff', backgroundColor: leftColor + '80' }]}>
             <Text style={[styles.stampText, { color: '#fff' }]} numberOfLines={1} adjustsFontSizeToFit>{labels.left}</Text>
           </View>
         </Animated.View>
         {onSwipeUp && labels.up && (
           <Animated.View style={[styles.stampContainer, upStampStyle]}>
-            <View style={[styles.stampBorder, { borderColor: '#fff', backgroundColor: upColor + '80' }]}>
+            <View style={[styles.stampBorder, { maxWidth: cardWidth * 0.85, borderColor: '#fff', backgroundColor: upColor + '80' }]}>
               <Text style={[styles.stampText, { color: '#fff' }]} numberOfLines={1} adjustsFontSizeToFit>{labels.up}</Text>
             </View>
           </Animated.View>
@@ -225,7 +224,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   stampBorder: {
-    maxWidth: CARD_WIDTH * 0.85,
     paddingHorizontal: 16,
     paddingVertical: 10,
     borderWidth: 4,
