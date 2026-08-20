@@ -404,15 +404,15 @@ function GroundTruthModal({
 const MODE_CONFIG = {
   swipe: {
     title: 'Classement Glisser',
-    emptyLabel: 'Glisser',
+    emptyMessage: 'Jouez en mode Glisser pour commencer',
   },
   compare: {
     title: 'Classement Comparaison',
-    emptyLabel: 'Comparer',
+    emptyMessage: 'Jouez en mode Comparer pour commencer',
   },
   rate: {
-    title: 'Classement Notation',
-    emptyLabel: 'Noter',
+    title: 'Votre classement',
+    emptyMessage: 'Notez les cartes dans l\'onglet Jeu pour commencer',
   },
 } as const;
 
@@ -518,9 +518,7 @@ export default function ResultsScreen() {
       ) : (
         <View style={styles.emptyContainer}>
           <Text style={styles.emptyText}>Aucune donnée</Text>
-          <Text style={styles.emptySubtext}>
-            Jouez en mode {config.emptyLabel} pour commencer
-          </Text>
+          <Text style={styles.emptySubtext}>{config.emptyMessage}</Text>
         </View>
       )}
 

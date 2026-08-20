@@ -59,7 +59,7 @@ interface CardContextType {
 
 // Initial state
 const initialState: CardState = {
-  gameMode: 'swipe',
+  gameMode: 'rate',
   swipeScores: {},
   swipeFirstPass: {},
   swipeStep: 1,
