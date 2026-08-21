@@ -6,8 +6,12 @@ import { CardData } from '@/context/CardContext';
 export const MAX_LAYOUT_WIDTH = 500;
 
 export function useCardSize() {
-  const { width } = useWindowDimensions();
-  const cardWidth = Math.min(width, MAX_LAYOUT_WIDTH) * 0.7;
+  const { width, height } = useWindowDimensions();
+  // Fill the available space, but never so tall that the card collides with the
+  // progress header and rating buttons (relevant on short/landscape web windows)
+  const maxWidth = Math.min(width, MAX_LAYOUT_WIDTH) * 0.85;
+  const maxHeight = height * 0.55;
+  const cardWidth = Math.min(maxWidth, maxHeight / 1.1);
   return { cardWidth, cardHeight: cardWidth * 1.1 };
 }
 

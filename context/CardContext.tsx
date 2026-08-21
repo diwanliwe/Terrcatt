@@ -20,6 +20,7 @@ export type ProfileRole =
 export type TerritoryLink = 'roya' | 'similar-territory' | 'no-link';
 
 export type AcquisitionSource =
+  | 'university'
   | 'word-of-mouth'
   | 'event'
   | 'social-media'

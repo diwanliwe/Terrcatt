@@ -65,7 +65,7 @@ Purpose: primary segmentation axis (matches the research method's stakeholder gr
   - 🔬 Chercheur·se ou étudiant·e
   - 🚜 Professionnel·le de l'agriculture ou du paysage
   - 🏘️ Habitant·e de la vallée
-  - 👀 Curieux·se — autre
+  - 👀 Curieux·se
 - Stored as `profile.roles` (array).
 
 ### S3 — Territory link: « Et votre territoire ? »
@@ -90,6 +90,7 @@ Purpose: measure which channels bring which personas (lead-magnet analytics).
 
 - Title: **« Comment avez-vous découvert Terrcatt ? »**
 - Options:
+  - 🎓 L'université ou l'équipe de recherche
   - 💬 Bouche à oreille
   - 🎪 Un atelier ou événement du projet
   - 📱 Réseaux sociaux

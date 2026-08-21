@@ -40,7 +40,7 @@ const ROLE_OPTIONS: QuestionOption[] = [
   { value: 'researcher', emoji: '🔬', label: 'Chercheur·se ou étudiant·e' },
   { value: 'agri-professional', emoji: '🚜', label: "Professionnel·le de l'agriculture ou du paysage" },
   { value: 'resident', emoji: '🏘️', label: 'Habitant·e de la vallée' },
-  { value: 'curious', emoji: '👀', label: 'Curieux·se — autre' },
+  { value: 'curious', emoji: '👀', label: 'Curieux·se' },
 ];
 
 const TERRITORY_OPTIONS: QuestionOption[] = [
@@ -50,6 +50,7 @@ const TERRITORY_OPTIONS: QuestionOption[] = [
 ];
 
 const SOURCE_OPTIONS: QuestionOption[] = [
+  { value: 'university', emoji: '🎓', label: "L'université ou l'équipe de recherche" },
   { value: 'word-of-mouth', emoji: '💬', label: 'Bouche à oreille' },
   { value: 'event', emoji: '🎪', label: 'Un atelier ou événement du projet' },
   { value: 'social-media', emoji: '📱', label: 'Réseaux sociaux' },

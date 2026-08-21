@@ -12,7 +12,7 @@ const RATING_OPTIONS = [
 ];
 
 export function RateMode() {
-  const { state, rateCard, nextRatingCard, resetRating } = useCards();
+  const { state, rateCard, nextRatingCard } = useCards();
   const currentIndex = state.currentRatingIndex;
   const isComplete = currentIndex >= CARDS.length;
   const currentCard = CARDS[currentIndex];
@@ -21,10 +21,6 @@ export function RateMode() {
     rateCard(currentCard.id, score);
     nextRatingCard();
   }, [currentCard, rateCard, nextRatingCard]);
-
-  const handleReset = useCallback(() => {
-    resetRating();
-  }, [resetRating]);
 
   return (
     <View style={styles.container}>
@@ -49,33 +45,31 @@ export function RateMode() {
 
       {!isComplete && (
         <View style={styles.buttonsContainer}>
-          <View style={styles.buttonsRow}>
-            {RATING_OPTIONS.map((option) => (
-              <Pressable
-                key={option.score}
-                style={({ pressed }) => [
-                  styles.ratingButton,
-                  { backgroundColor: option.color },
-                  pressed && styles.buttonPressed,
-                ]}
-                onPress={() => handleRate(option.score)}
-              >
-                <Text style={styles.buttonScore}>
-                  {option.score > 0 ? `+${option.score}` : option.score}
-                </Text>
-              </Pressable>
-            ))}
-          </View>
-          <View style={styles.labelsRow}>
-            <Text style={styles.labelLeft}>Très défavorable</Text>
-            <Text style={styles.labelRight}>Très favorable</Text>
+          <View style={styles.buttonsBlock}>
+            <View style={styles.buttonsRow}>
+              {RATING_OPTIONS.map((option) => (
+                <Pressable
+                  key={option.score}
+                  style={({ pressed }) => [
+                    styles.ratingButton,
+                    { backgroundColor: option.color },
+                    pressed && styles.buttonPressed,
+                  ]}
+                  onPress={() => handleRate(option.score)}
+                >
+                  <Text style={styles.buttonScore}>
+                    {option.score > 0 ? `+${option.score}` : option.score}
+                  </Text>
+                </Pressable>
+              ))}
+            </View>
+            <View style={styles.labelsRow}>
+              <Text style={styles.labelLeft}>Très défavorable</Text>
+              <Text style={styles.labelRight}>Très favorable</Text>
+            </View>
           </View>
         </View>
       )}
-
-      <Pressable style={styles.resetButton} onPress={handleReset}>
-        <Text style={styles.resetButtonText}>Réinitialiser</Text>
-      </Pressable>
     </View>
   );
 }
@@ -115,7 +109,13 @@ const styles = StyleSheet.create({
   buttonsContainer: {
     width: '100%',
     paddingHorizontal: 20,
-    marginBottom: 20,
+    marginBottom: 30,
+    alignItems: 'center',
+  },
+  // Width shrinks to the buttons row, so the labels below stay anchored to the
+  // extreme buttons instead of the screen edges (visible on wide web layouts)
+  buttonsBlock: {
+    alignSelf: 'center',
   },
   buttonsRow: {
     flexDirection: 'row',
@@ -142,7 +142,6 @@ const styles = StyleSheet.create({
   labelsRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    paddingHorizontal: 8,
     marginTop: 8,
   },
   labelLeft: {
@@ -152,17 +151,5 @@ const styles = StyleSheet.create({
   labelRight: {
     fontSize: 12,
     color: '#666',
-  },
-  resetButton: {
-    backgroundColor: '#C4956A',
-    paddingHorizontal: 32,
-    paddingVertical: 12,
-    borderRadius: 8,
-    marginBottom: 30,
-  },
-  resetButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
   },
 });
