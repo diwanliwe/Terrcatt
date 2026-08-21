@@ -41,22 +41,32 @@ Implemented in `components/RateMode.tsx`:
   user.
 - Still possible later: color flash of the chosen button, haptics (see item 5).
 
-## 4. Results page — full redesign
+## 4. Results page — full redesign — ✅ DONE (2026-08-21)
 
-Current state: three horizontal scrollable rankings, "very ugly", not designed at
-all. Needs a real design pass. Goals:
-
-- Make *my ranking* instantly readable (all 15 cards, my score for each).
-- The reveal: comparison with the scientific "vérité terrain" — this is the payoff
-  of the whole game and deserves a dedicated, well-designed moment (agreement /
-  divergence per card, maybe an overall "convergence score").
-- This page is also where the lead-magnet conversion lives (see onboarding spec:
-  email capture "recevoir les résultats de l'étude" belongs here, post-value).
-- Since the app is rating-only now, drop the three-ranking layout; design for one
-  ranking + comparison.
+Implemented in `app/(tabs)/results.tsx` + `components/results/`:
+- **Reveal only after completion** (locked state with progress + CTA before), so
+  the study's view can't bias remaining ratings.
+- **Perspective framing, not right/wrong**: per card, *Vous* vs *L'étude* scores;
+  cards classified by score gap into *Regard différent* (≥2) / *Regard proche* (1)
+  / *Même regard* (0), with a neutral violet/blue/teal palette. "Vérité terrain"
+  never appears in the UI. Headline: « Vous partagez le regard de l'étude sur N
+  cartes sur 15 ».
+- **Two views**, selectable from a pill in the tab header (for client testing):
+  *Carrousel* (one centred card, neighbours peeking, dots tracking the focused
+  card) and *Groupes* (reflowing grid by perspective, different ones first).
+- Unified type scale (24/15/13) and 8/16/24 spacing in `components/results/theme.ts`.
+- Entrance choreography on both views (title → hint → cards → dots), replayed on
+  revisit, with an **Animations** toggle in Paramètres. ⚠️ Web constraint: only
+  Reanimated presets or shared-value animations — custom `Keyframe` entering
+  animations break on web (see `components/results/Reveal.tsx` comments).
+- Ground-truth data is still a **placeholder** in `components/results/resultsData.ts`.
+- Email capture ("recevoir les résultats de l'étude") not done yet — belongs here,
+  post-value; do it with item 6 / 9.
 
 ## 5. Settings page — make it real
 
+- Rework the whole page (structure + design), not just add items. Now also hosts
+  the *Animations* toggle (section « Affichage »).
 - Improve overall layout/design.
 - Add the basic legitimacy items:
   - Send feedback (mailto or simple form).
@@ -67,7 +77,7 @@ all. Needs a real design pass. Goals:
 - Toggle for haptic feedback on game-loop interactions (rating buttons etc.) —
   and actually add the haptics themselves to the core loop.
 
-## 6. Data: anonymous user + storing all interactions
+## 6. Data: anonymous user + storing all interactions — 🔜 NEXT (groundwork)
 
 Decision already documented in `docs/onboarding/CLAUDE.md` → "Data storage & sync".
 Summary: anonymous UUID created at first launch (no name, no account), offline-first
@@ -90,3 +100,33 @@ completion screen forever. The app becomes single-use. To think through:
 - Related tension to settle: one-shot for data integrity vs. replayability for
   engagement. Maybe ratings stay final but the tab stays *alive* (explore, learn,
   share) rather than replayable.
+
+## 8. Card detail — page instead of modal — 🔜 NEXT
+
+Current: tapping a result card opens a bottom-sheet modal (`components/results/
+GroundTruthModal.tsx`) with the two scores, the study's explanation and a
+comment/voice-note capture. Not convinced by the modal: once there is real
+content per card (definition, photo context, what the study observed, why
+perspectives differ, maybe several paragraphs and visuals) a sheet is too
+cramped and scrolls awkwardly.
+
+To explore:
+- A dedicated **detail page** (`/card/[id]`, native push on mobile, route on web)
+  with room for long-form content. Can be reused from the Jeu tab later (item 7,
+  gallery) and from the card-flip idea (item 2).
+- **Drop comments and voice notes for now**: unknown engagement, and they add
+  audio permissions + storage complexity. Keep the reducer shape (`comments`) so
+  they can come back once the data layer (item 6) exists and we know people
+  actually read the detail pages.
+- Reuse the results vocabulary: *Votre regard* / *Regard de l'étude*, perspective
+  colour as accent, same type scale.
+
+## 9. Hosting + first client review wave — 🔜 groundwork
+
+- Deploy the web build to **Vercel** (Expo web export, static). Needs: a build
+  script, `app.json` web config check, a stable URL to share.
+- Once items 6 (data) and 8 are in: send to the client for a first wave of
+  feedback. Before that, a lightweight "preview" deploy is fine for the visual
+  pass (results page, onboarding).
+- Open question: do we gate the preview (simple password / unlisted URL)? Decide
+  with the client.

@@ -1,12 +1,14 @@
 import React from 'react';
-import { StyleSheet, View, Text, ScrollView, Pressable, Linking } from 'react-native';
+import { StyleSheet, View, Text, ScrollView, Pressable, Linking, Switch } from 'react-native';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { useRouter } from 'expo-router';
+import { useCards } from '@/context/CardContext';
 
 const CONTACT_EMAIL = 'marianne.cohen@sorbonne-universite.fr';
 
 export default function SettingsScreen() {
   const router = useRouter();
+  const { state, setAnimationsEnabled } = useCards();
 
   const handleContact = () => {
     Linking.openURL(`mailto:${CONTACT_EMAIL}?subject=Projet Terrcatt – Prise de contact`);
@@ -23,6 +25,22 @@ export default function SettingsScreen() {
           <FontAwesome name="play-circle" size={18} color="#C4956A" />
           <Text style={styles.onboardingButtonText}>Voir l'introduction</Text>
         </Pressable>
+      </View>
+
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Affichage</Text>
+        <View style={styles.toggleRow}>
+          <View style={styles.toggleText}>
+            <Text style={styles.toggleLabel}>Animations</Text>
+            <Text style={styles.toggleHint}>Apparition animée des résultats</Text>
+          </View>
+          <Switch
+            value={state.animationsEnabled}
+            onValueChange={setAnimationsEnabled}
+            trackColor={{ true: '#C4956A', false: '#DDD' }}
+            thumbColor="#fff"
+          />
+        </View>
       </View>
 
       <View style={styles.section}>
@@ -95,6 +113,15 @@ const styles = StyleSheet.create({
     color: '#555',
     marginBottom: 10,
   },
+  toggleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 6,
+  },
+  toggleText: { flex: 1, marginRight: 16 },
+  toggleLabel: { fontSize: 16, fontWeight: '600', color: '#333' },
+  toggleHint: { fontSize: 13, color: '#888', marginTop: 2 },
   onboardingButton: {
     flexDirection: 'row',
     alignItems: 'center',

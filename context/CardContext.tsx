@@ -47,6 +47,7 @@ interface CardState {
   comparisonCount: number;
   comments: Record<number, CardComment>;
   profile: UserProfile;
+  animationsEnabled: boolean;
 }
 
 type CardAction =
@@ -64,7 +65,8 @@ type CardAction =
   | { type: 'RESET_RATING' }
   | { type: 'NEXT_RATING_CARD' }
   | { type: 'SET_COMMENT'; cardId: number; comment: CardComment }
-  | { type: 'SET_PROFILE'; profile: Partial<UserProfile> };
+  | { type: 'SET_PROFILE'; profile: Partial<UserProfile> }
+  | { type: 'SET_ANIMATIONS_ENABLED'; enabled: boolean };
 
 interface CardContextType {
   state: CardState;
@@ -83,6 +85,7 @@ interface CardContextType {
   setGameMode: (mode: GameMode) => void;
   setComment: (cardId: number, comment: CardComment) => void;
   setProfile: (profile: Partial<UserProfile>) => void;
+  setAnimationsEnabled: (enabled: boolean) => void;
 }
 
 // Initial state
@@ -103,6 +106,7 @@ const initialState: CardState = {
     territoryLink: null,
     source: null,
   },
+  animationsEnabled: true,
 };
 
 // Reducer
@@ -206,6 +210,8 @@ function cardReducer(state: CardState, action: CardAction): CardState {
           [action.cardId]: action.comment,
         },
       };
+    case 'SET_ANIMATIONS_ENABLED':
+      return { ...state, animationsEnabled: action.enabled };
     case 'SET_PROFILE':
       return {
         ...state,
@@ -286,6 +292,10 @@ export function CardProvider({ children }: { children: ReactNode }) {
     dispatch({ type: 'SET_PROFILE', profile });
   };
 
+  const setAnimationsEnabled = (enabled: boolean) => {
+    dispatch({ type: 'SET_ANIMATIONS_ENABLED', enabled });
+  };
+
   return (
     <CardContext.Provider
       value={{
@@ -305,6 +315,7 @@ export function CardProvider({ children }: { children: ReactNode }) {
         setGameMode,
         setComment,
         setProfile,
+        setAnimationsEnabled,
       }}
     >
       {children}
