@@ -29,23 +29,17 @@ Open question: what lives on the back? Candidates:
 Content needs to come from Prof. Cohen's material; the mechanism (flip + per-card
 text in `CARDS`) is straightforward.
 
-## 3. Rating transition animation + end-of-game handoff
+## 3. Rating transition animation + end-of-game handoff — ✅ DONE (2026-08-21)
 
-Two distinct problems:
-
-**a. Card-to-card transition.** Currently the next card just appears — very basic.
-Ideas: the card animates away in the direction of the verdict (flies left when
-rated negative, right when positive, with a color flash of the chosen button), next
-card scales/fades in. Reuse the Reanimated patterns from SwipeableCard.
-
-**b. End of game → results (the real UX miss).** Today the screen says "done, go
-look at the Results tab" and dies. The moment of maximum engagement gets a dead end.
-Options:
-- Auto-navigate to Results after the last rating (with a short "Terminé ! 🎉"
-  beat/animation first so completion feels rewarded).
-- Or a celebratory completion screen with a single big « Voir mes résultats »
-  button.
-- Either way: never leave the user to find the Results tab by themselves.
+Implemented in `components/RateMode.tsx`:
+- **a. Card-to-card transition**: card flies off toward the verdict side (left =
+  negative, right = positive, slight rotation; neutral shrinks and fades in place),
+  next card fades/scales in. Double-taps guarded during the animation.
+- **b. End of game**: celebratory completion view (🎉 + message, FadeInDown) with a
+  single big « Voir mes résultats » button → `router.push('/results')`. Chose the
+  button over auto-navigation: gives a completion beat and keeps control with the
+  user.
+- Still possible later: color flash of the chosen button, haptics (see item 5).
 
 ## 4. Results page — full redesign
 
@@ -81,3 +75,18 @@ local persistence of everything (onboarding profile + every game interaction),
 idempotent snapshot sync to a managed backend later. Even before any backend
 exists, the app should create the user ID and persist onboarding + game data
 locally — that's the first implementation step when we start this work.
+
+## 7. Game page after completion — avoid the permanent dead end
+
+The game is one-shot by design (no reset button in the finished version), but that
+creates a problem: once you've rated the 15 cards, the Jeu tab is stuck on the
+completion screen forever. The app becomes single-use. To think through:
+
+- What does the Jeu tab *become* after completion? Ideas: a "contribution recorded"
+  state with your summary + entry to results; a gallery to revisit the 15 cards
+  (pairs well with the card-flip idea, item 2); revise-my-answers mode (allowed or
+  not? — research implications); share/invite ("faites jouer votre entourage" —
+  serves the lead-magnet goal).
+- Related tension to settle: one-shot for data integrity vs. replayability for
+  engagement. Maybe ratings stay final but the tab stays *alive* (explore, learn,
+  share) rather than replayable.
