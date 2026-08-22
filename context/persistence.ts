@@ -22,6 +22,12 @@ export function createUserId(): string {
   return Crypto.randomUUID();
 }
 
+/** Proves ownership of the participant row on the server; never leaves the device except inside the upsert call. */
+export function createDeviceSecret(): string {
+  const bytes = Crypto.getRandomBytes(32);
+  return Array.from(bytes, (b) => b.toString(16).padStart(2, '0')).join('');
+}
+
 export async function load<S>(): Promise<S | null> {
   try {
     const raw = await AsyncStorage.getItem(STORAGE_KEY);

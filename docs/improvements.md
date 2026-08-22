@@ -78,7 +78,7 @@ Implemented in `app/(tabs)/results.tsx` + `components/results/`:
 - Toggle for haptic feedback on game-loop interactions (rating buttons etc.) —
   and actually add the haptics themselves to the core loop.
 
-## 6. Data: anonymous user + storing all interactions — 🟡 LOCAL DONE (2026-08-22), sync next
+## 6. Data: anonymous user + storing all interactions — ✅ CODE DONE (2026-08-22), needs Supabase project
 
 Decision already documented in `docs/onboarding/CLAUDE.md` → "Data storage & sync".
 Summary: anonymous UUID created at first launch (no name, no account), offline-first
@@ -95,11 +95,23 @@ Hydrates before first render (splash hides after hydration), saves debounced
 250 ms on every change, `resetAll()` wipes storage and mints a new participant
 (for item 5's "Supprimer mes données"). Nothing is sent anywhere yet.
 
-Next (sync half): a single idempotent `upsertParticipant(userId, snapshot)`
-mutation on the backend, called on meaningful moments + app-foreground. Backend
-direction: Convex is fine (tiny surface, Expo support, export, self-hostable) —
-**verify EU data residency** for the Sorbonne/GDPR context before real data lands;
-fallback is self-hosted Convex or an EU Postgres behind the same one function.
+Sync half (2026-08-22) — **Supabase, EU region** (decided: EU storage is a
+requirement, Convex cloud is US-hosted). `lib/supabase.ts` (null client when
+`EXPO_PUBLIC_SUPABASE_*` env vars are absent → app runs fully offline),
+`context/sync.ts` (`pushSnapshot` / `deleteSnapshot`, never throw),
+`supabase/migrations/0001_participants.sql`. Model: one `participants` row per
+local UUID with the full snapshot as jsonb; RLS on with **no policies** — all
+writes go through `upsert_participant` (security definer). Ownership without
+accounts: a per-device random secret, bcrypt-hashed on first insert, required
+on every later write/delete — the public anon key alone can't overwrite or
+read anyone's data. Triggers: debounced 1.5 s after every logged interaction
++ app-foreground when dirty. `resetAll()` deletes the server row then local.
+
+**To do by hand (once):** create the Supabase project in **Frankfurt
+(eu-central-1) or Paris (eu-west-3)**, run the migration in the SQL editor,
+copy URL + anon key into `.env` (see `.env.example`) and into Vercel env for
+item 9. Research export: dashboard → `participants` → CSV/JSON, or a SQL
+query over `snapshot -> 'events'`.
 
 ## 7. Game page after completion — avoid the permanent dead end
 

@@ -178,8 +178,9 @@ When we build the sync half, follow this architecture:
   needed. Retry is free because the upsert is idempotent. Sync on meaningful moments
   (onboarding finished, each rating, game completed) AND on app-foreground — partial
   sessions are still data points.
-- **Backend**: a managed DB (likely Convex — plugin already configured) is fine;
-  "no third-party data provider" means no analytics resellers, not no backend.
+- **Backend**: Supabase (Postgres) in an **EU region** — EU data residency is a
+  requirement for the Sorbonne/GDPR context (Convex cloud is US-hosted, dropped).
+  "No third-party data provider" means no analytics resellers, not no backend.
 - **Voice notes are a separate milestone.** v1 sync is text-only; audio needs blob
   storage, upload retry, and size handling — don't let it block the snapshot sync.
 - **Stamp `schemaVersion` on every synced payload** from day one (rating-only now;

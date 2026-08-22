@@ -1,6 +1,8 @@
 import React, { createContext, useContext, useReducer, useEffect, useRef, useState, ReactNode } from 'react';
+import { AppState } from 'react-native';
 import * as SplashScreen from 'expo-splash-screen';
-import { load, save, clear, createUserId } from './persistence';
+import { load, save, clear, createUserId, createDeviceSecret } from './persistence';
+import { pushSnapshot, deleteSnapshot } from './sync';
 import { ImageSourcePropType } from 'react-native';
 
 // Types
@@ -53,6 +55,8 @@ export interface InteractionEvent {
 interface CardState {
   /** Anonymous participant id, created at first launch. No accounts, ever. */
   userId: string;
+  /** Random per-device secret proving ownership of the server row. Not part of the snapshot. */
+  deviceSecret: string;
   createdAt: number;
   events: InteractionEvent[];
   gameMode: GameMode;
@@ -115,6 +119,7 @@ interface CardContextType {
 // Initial state
 const initialState: CardState = {
   userId: '',
+  deviceSecret: '',
   createdAt: 0,
   events: [],
   gameMode: 'rate',
@@ -137,7 +142,7 @@ const initialState: CardState = {
 };
 
 function freshState(): CardState {
-  return { ...initialState, userId: createUserId(), createdAt: Date.now() };
+  return { ...initialState, userId: createUserId(), deviceSecret: createDeviceSecret(), createdAt: Date.now() };
 }
 
 function logged(state: CardState, event: Omit<InteractionEvent, 'at'>): CardState {
@@ -293,7 +298,36 @@ export function CardProvider({ children }: { children: ReactNode }) {
     return () => { if (saveTimer.current) clearTimeout(saveTimer.current); };
   }, [state, hydrated]);
 
+  // Sync: push the whole snapshot after each meaningful moment (every logged
+  // interaction) and whenever the app comes to the foreground. Offline-first —
+  // a failed push just leaves the snapshot dirty for the next trigger.
+  const dirty = useRef(false);
+  const syncTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const latest = useRef(state);
+  latest.current = state;
+  const flush = async () => {
+    const s = latest.current;
+    const { deviceSecret, ...snapshot } = s;
+    const ok = await pushSnapshot(s.userId, deviceSecret, snapshot);
+    if (ok) dirty.current = false;
+  };
+  useEffect(() => {
+    if (!hydrated) return;
+    dirty.current = true;
+    if (syncTimer.current) clearTimeout(syncTimer.current);
+    syncTimer.current = setTimeout(flush, 1500);
+    return () => { if (syncTimer.current) clearTimeout(syncTimer.current); };
+  }, [state.events.length, hydrated]);
+  useEffect(() => {
+    const sub = AppState.addEventListener('change', (next) => {
+      if (next === 'active' && hydrated && dirty.current) flush();
+    });
+    return () => sub.remove();
+  }, [hydrated]);
+
   const resetAll = async () => {
+    if (syncTimer.current) clearTimeout(syncTimer.current);
+    await deleteSnapshot(latest.current.userId, latest.current.deviceSecret);
     await clear();
     dispatch({ type: 'RESET_ALL' });
   };
