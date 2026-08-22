@@ -16,10 +16,14 @@ export default function ResultsScreen() {
   // Skip the initial mount (the first render already animates) and ignore
   // re-focus within a few seconds: remounting an element while its entering
   // animation is still running crashes Reanimated's web cleanup.
+  // Coming back from a card detail page is not a new visit: the carousel must
+  // stay exactly where it was, without replaying the entrance.
   const [visit, setVisit] = useState(0);
   const lastVisitAt = useRef(0);
+  const leftForDetail = useRef(false);
   useFocusEffect(
     useCallback(() => {
+      if (leftForDetail.current) { leftForDetail.current = false; return; }
       const now = Date.now();
       if (lastVisitAt.current === 0) { lastVisitAt.current = now; return; }
       if (now - lastVisitAt.current < 4000) return;
@@ -28,10 +32,15 @@ export default function ResultsScreen() {
     }, []),
   );
 
+  const openDetail = (cardId: number) => {
+    leftForDetail.current = true;
+    router.push({ pathname: '/card/[id]', params: { id: String(cardId) } });
+  };
+
   return (
     <View style={[styles.container, { paddingTop: insets.top + 10 }]}>
       {isComplete ? (
-        <CarouselView key={`carousel-${visit}`} entries={byInterest} onSelect={(e) => router.push({ pathname: "/card/[id]", params: { id: String(e.card.id) } })} />
+        <CarouselView key={`carousel-${visit}`} entries={byInterest} onSelect={(e) => openDetail(e.card.id)} />
       ) : (
         <LockedState
           rated={ratedCount}
