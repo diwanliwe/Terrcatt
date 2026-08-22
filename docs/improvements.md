@@ -51,9 +51,10 @@ Implemented in `app/(tabs)/results.tsx` + `components/results/`:
   / *Même regard* (0), with a neutral violet/blue/teal palette. "Vérité terrain"
   never appears in the UI. Headline: « Vous partagez le regard de l'étude sur N
   cartes sur 15 ».
-- **Two views**, selectable from a pill in the tab header (for client testing):
-  *Carrousel* (one centred card, neighbours peeking, dots tracking the focused
-  card) and *Groupes* (reflowing grid by perspective, different ones first).
+- **Carousel only** (2026-08-22): one centred card, neighbours peeking, dots
+  tracking the focused card. The *Groupes* grid and the header view selector were
+  tried and removed; the tab header is hidden (same as Jeu) so the page is the
+  headline + carousel.
 - Unified type scale (24/15/13) and 8/16/24 spacing in `components/results/theme.ts`.
 - Entrance choreography on both views (title → hint → cards → dots), replayed on
   revisit, with an **Animations** toggle in Paramètres. ⚠️ Web constraint: only

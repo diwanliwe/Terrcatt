@@ -1,6 +1,7 @@
 import React, { useMemo, useState, useCallback, useRef } from 'react';
 import { StyleSheet, View, Text, Pressable } from 'react-native';
-import { useRouter, Tabs, useFocusEffect } from 'expo-router';
+import { useRouter, useFocusEffect } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { useCards, CARDS } from '@/context/CardContext';
 import {
@@ -9,19 +10,16 @@ import {
   normalizeCompareScores,
   ResultEntry,
 } from '@/components/results/resultsData';
-import { ResultViewModal, ResultView, RESULT_VIEW_LABELS } from '@/components/results/ResultViewModal';
 import { GroundTruthModal } from '@/components/results/GroundTruthModal';
-import { GroupsView } from '@/components/results/GroupsView';
 import { CarouselView } from '@/components/results/CarouselView';
-import { type, space, accent } from '@/components/results/theme';
+import { type, space } from '@/components/results/theme';
 
 export default function ResultsScreen() {
   const { state, setComment } = useCards();
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const { gameMode } = state;
 
-  const [view, setView] = useState<ResultView>('carousel');
-  const [viewModalVisible, setViewModalVisible] = useState(false);
   const [selected, setSelected] = useState<ResultEntry | null>(null);
 
   // Replay the entrance choreography when the user comes back to this tab.
@@ -62,34 +60,10 @@ export default function ResultsScreen() {
   // Keep the open modal in sync if a comment is saved while it's open
   const selectedEntry = selected ? entries.find((e) => e.card.id === selected.card.id) ?? null : null;
 
-  const renderView = () => {
-    switch (view) {
-      case 'groups':
-        return <GroupsView key={`groups-${visit}`} entries={byInterest} onSelect={setSelected} />;
-      case 'carousel':
-        return <CarouselView key={`carousel-${visit}`} entries={byInterest} onSelect={setSelected} />;
-    }
-  };
-
   return (
-    <View style={styles.container}>
-      <Tabs.Screen
-        options={{
-          headerRight: () =>
-            isComplete ? (
-              <Pressable
-                style={({ pressed }) => [styles.pill, pressed && styles.pillPressed]}
-                onPress={() => setViewModalVisible(true)}
-              >
-                <Text style={styles.pillText}>{RESULT_VIEW_LABELS[view]}</Text>
-                <FontAwesome name="chevron-down" size={12} color="#C4956A" />
-              </Pressable>
-            ) : null,
-        }}
-      />
-
+    <View style={[styles.container, { paddingTop: insets.top + 10 }]}>
       {isComplete ? (
-        renderView()
+        <CarouselView key={`carousel-${visit}`} entries={byInterest} onSelect={setSelected} />
       ) : (
         <LockedState
           rated={ratedCount}
@@ -97,13 +71,6 @@ export default function ResultsScreen() {
           onContinue={() => router.navigate('/')}
         />
       )}
-
-      <ResultViewModal
-        visible={viewModalVisible}
-        currentView={view}
-        onSelect={setView}
-        onClose={() => setViewModalVisible(false)}
-      />
 
       <GroundTruthModal
         visible={selectedEntry !== null}
@@ -144,21 +111,6 @@ function LockedState({ rated, total, onContinue }: { rated: number; total: numbe
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#FDFCFA' },
-  pill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    marginRight: 16,
-    backgroundColor: '#FFF8F2',
-    borderWidth: 1,
-    borderColor: '#C4956A',
-    borderRadius: 20,
-    paddingHorizontal: 14,
-    paddingVertical: 7,
-  },
-  pillPressed: { opacity: 0.7 },
-  pillText: { ...type.bodyStrong, color: accent },
-
   locked: {
     flex: 1,
     alignItems: 'center',

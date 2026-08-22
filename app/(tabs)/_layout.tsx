@@ -40,6 +40,7 @@ export default function TabLayout() {
         name="results"
         options={{
           title: 'Résultats',
+          headerShown: false,
           tabBarIcon: ({ color }) => <TabBarIcon name="trophy" color={color} />,
         }}
       />
