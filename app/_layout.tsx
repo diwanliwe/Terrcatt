@@ -34,11 +34,8 @@ export default function RootLayout() {
     if (error) throw error;
   }, [error]);
 
-  useEffect(() => {
-    if (loaded) {
-      SplashScreen.hideAsync();
-    }
-  }, [loaded]);
+  // The splash is hidden by CardProvider once the local participant record is
+  // loaded, so the first frame the player sees is already their own state.
 
   if (!loaded) {
     return null;

@@ -1,4 +1,6 @@
-import React, { createContext, useContext, useReducer, ReactNode } from 'react';
+import React, { createContext, useContext, useReducer, useEffect, useRef, useState, ReactNode } from 'react';
+import * as SplashScreen from 'expo-splash-screen';
+import { load, save, clear, createUserId } from './persistence';
 import { ImageSourcePropType } from 'react-native';
 
 // Types
@@ -34,7 +36,25 @@ export interface UserProfile {
   source: AcquisitionSource | null;
 }
 
+/**
+ * Every meaningful interaction, in order, with a timestamp. The final
+ * `{cardId: score}` maps are convenient for the UI; this log is what the
+ * research side needs (revisions, order effects) and can't be rebuilt later.
+ */
+export interface InteractionEvent {
+  type: 'rate' | 'swipe1' | 'swipe2' | 'compare' | 'profile' | 'comment';
+  at: number; // epoch ms
+  cardId?: number;
+  value?: number;
+  /** compare: the losing card; 0 = tie. */
+  otherId?: number;
+}
+
 interface CardState {
+  /** Anonymous participant id, created at first launch. No accounts, ever. */
+  userId: string;
+  createdAt: number;
+  events: InteractionEvent[];
   gameMode: GameMode;
   swipeScores: Record<number, number>;
   swipeFirstPass: Record<number, number>; // Step 1 results: 1=favorable, -1=unfavorable, 0=neutral
@@ -66,7 +86,9 @@ type CardAction =
   | { type: 'NEXT_RATING_CARD' }
   | { type: 'SET_COMMENT'; cardId: number; comment: CardComment }
   | { type: 'SET_PROFILE'; profile: Partial<UserProfile> }
-  | { type: 'SET_ANIMATIONS_ENABLED'; enabled: boolean };
+  | { type: 'SET_ANIMATIONS_ENABLED'; enabled: boolean }
+  | { type: 'HYDRATE'; state: CardState }
+  | { type: 'RESET_ALL' };
 
 interface CardContextType {
   state: CardState;
@@ -86,10 +108,15 @@ interface CardContextType {
   setComment: (cardId: number, comment: CardComment) => void;
   setProfile: (profile: Partial<UserProfile>) => void;
   setAnimationsEnabled: (enabled: boolean) => void;
+  /** Wipes every local trace and starts as a brand-new anonymous participant. */
+  resetAll: () => Promise<void>;
 }
 
 // Initial state
 const initialState: CardState = {
+  userId: '',
+  createdAt: 0,
+  events: [],
   gameMode: 'rate',
   swipeScores: {},
   swipeFirstPass: {},
@@ -109,9 +136,21 @@ const initialState: CardState = {
   animationsEnabled: true,
 };
 
+function freshState(): CardState {
+  return { ...initialState, userId: createUserId(), createdAt: Date.now() };
+}
+
+function logged(state: CardState, event: Omit<InteractionEvent, 'at'>): CardState {
+  return { ...state, events: [...state.events, { ...event, at: Date.now() }] };
+}
+
 // Reducer
 function cardReducer(state: CardState, action: CardAction): CardState {
   switch (action.type) {
+    case 'HYDRATE':
+      return action.state;
+    case 'RESET_ALL':
+      return freshState();
     case 'SET_GAME_MODE':
       return {
         ...state,
@@ -119,7 +158,7 @@ function cardReducer(state: CardState, action: CardAction): CardState {
       };
     case 'SWIPE_FIRST_PASS':
       return {
-        ...state,
+        ...logged(state, { type: 'swipe1', cardId: action.cardId, value: action.value }),
         swipeFirstPass: {
           ...state.swipeFirstPass,
           [action.cardId]: action.value,
@@ -131,7 +170,7 @@ function cardReducer(state: CardState, action: CardAction): CardState {
       };
     case 'SWIPE_SECOND_PASS':
       return {
-        ...state,
+        ...logged(state, { type: 'swipe2', cardId: action.cardId, value: action.value }),
         swipeScores: {
           ...state.swipeScores,
           [action.cardId]: action.value,
@@ -155,7 +194,7 @@ function cardReducer(state: CardState, action: CardAction): CardState {
       };
     case 'COMPARE_WIN':
       return {
-        ...state,
+        ...logged(state, { type: 'compare', cardId: action.winnerId, otherId: action.loserId }),
         compareScores: {
           ...state.compareScores,
           [action.winnerId]: (state.compareScores[action.winnerId] || 0) + 1,
@@ -165,12 +204,12 @@ function cardReducer(state: CardState, action: CardAction): CardState {
       };
     case 'COMPARE_TIE':
       return {
-        ...state,
+        ...logged(state, { type: 'compare', otherId: 0 }),
         comparisonCount: state.comparisonCount + 1,
       };
     case 'RATE_CARD':
       return {
-        ...state,
+        ...logged(state, { type: 'rate', cardId: action.cardId, value: action.score }),
         ratingScores: {
           ...state.ratingScores,
           [action.cardId]: action.score,
@@ -204,7 +243,7 @@ function cardReducer(state: CardState, action: CardAction): CardState {
       };
     case 'SET_COMMENT':
       return {
-        ...state,
+        ...logged(state, { type: 'comment', cardId: action.cardId }),
         comments: {
           ...state.comments,
           [action.cardId]: action.comment,
@@ -214,7 +253,7 @@ function cardReducer(state: CardState, action: CardAction): CardState {
       return { ...state, animationsEnabled: action.enabled };
     case 'SET_PROFILE':
       return {
-        ...state,
+        ...logged(state, { type: 'profile' }),
         profile: {
           ...state.profile,
           ...action.profile,
@@ -231,6 +270,35 @@ const CardContext = createContext<CardContextType | undefined>(undefined);
 // Provider
 export function CardProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(cardReducer, initialState);
+  const [hydrated, setHydrated] = useState(false);
+
+  // Load the participant's local record once; create the identity on first launch.
+  useEffect(() => {
+    let cancelled = false;
+    load<CardState>().then((stored) => {
+      if (cancelled) return;
+      dispatch({ type: 'HYDRATE', state: stored ?? freshState() });
+      setHydrated(true);
+      SplashScreen.hideAsync();
+    });
+    return () => { cancelled = true; };
+  }, []);
+
+  // Every change is written locally, debounced so a burst of dispatches costs one write.
+  const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => {
+    if (!hydrated) return;
+    if (saveTimer.current) clearTimeout(saveTimer.current);
+    saveTimer.current = setTimeout(() => save(state), 250);
+    return () => { if (saveTimer.current) clearTimeout(saveTimer.current); };
+  }, [state, hydrated]);
+
+  const resetAll = async () => {
+    await clear();
+    dispatch({ type: 'RESET_ALL' });
+  };
+
+  if (!hydrated) return null;
 
   const swipeFirstPass = (cardId: number, value: number) => {
     dispatch({ type: 'SWIPE_FIRST_PASS', cardId, value });
@@ -316,6 +384,7 @@ export function CardProvider({ children }: { children: ReactNode }) {
         setComment,
         setProfile,
         setAnimationsEnabled,
+        resetAll,
       }}
     >
       {children}

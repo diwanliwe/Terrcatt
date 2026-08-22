@@ -78,7 +78,7 @@ Implemented in `app/(tabs)/results.tsx` + `components/results/`:
 - Toggle for haptic feedback on game-loop interactions (rating buttons etc.) —
   and actually add the haptics themselves to the core loop.
 
-## 6. Data: anonymous user + storing all interactions — 🔜 NEXT (groundwork)
+## 6. Data: anonymous user + storing all interactions — 🟡 LOCAL DONE (2026-08-22), sync next
 
 Decision already documented in `docs/onboarding/CLAUDE.md` → "Data storage & sync".
 Summary: anonymous UUID created at first launch (no name, no account), offline-first
@@ -86,6 +86,20 @@ local persistence of everything (onboarding profile + every game interaction),
 idempotent snapshot sync to a managed backend later. Even before any backend
 exists, the app should create the user ID and persist onboarding + game data
 locally — that's the first implementation step when we start this work.
+
+Done (local half): `context/persistence.ts` (AsyncStorage, versioned envelope
+`{schemaVersion, state}`, `expo-crypto` UUID) + `CardContext`: `userId`,
+`createdAt`, and an ordered `events` log (`rate`/`swipe1`/`swipe2`/`compare`/
+`profile`/`comment`, epoch-ms timestamps) alongside the existing score maps.
+Hydrates before first render (splash hides after hydration), saves debounced
+250 ms on every change, `resetAll()` wipes storage and mints a new participant
+(for item 5's "Supprimer mes données"). Nothing is sent anywhere yet.
+
+Next (sync half): a single idempotent `upsertParticipant(userId, snapshot)`
+mutation on the backend, called on meaningful moments + app-foreground. Backend
+direction: Convex is fine (tiny surface, Expo support, export, self-hostable) —
+**verify EU data residency** for the Sorbonne/GDPR context before real data lands;
+fallback is self-hosted Convex or an EU Postgres behind the same one function.
 
 ## 7. Game page after completion — avoid the permanent dead end
 

@@ -160,9 +160,9 @@ tutorial — it answers "what am I about to do and why is it worth 5 minutes".
   "onboarding completed" flag are the first things to persist (so onboarding shows
   once, not per launch).
 
-## Data storage & sync (decided direction — NOT implemented yet)
+## Data storage & sync (decided direction — local half implemented 2026-08-22, see docs/improvements.md §6)
 
-Deferred until app polish is done. When we build it, follow this architecture:
+When we build the sync half, follow this architecture:
 
 - **Offline-first, not either/or.** Local storage is ALWAYS the source of truth;
   every answer/rating writes locally immediately (AsyncStorage persisting the
