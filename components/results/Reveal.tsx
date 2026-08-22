@@ -1,13 +1,11 @@
 import React, { useEffect } from 'react';
 import Animated, {
-  FadeInDown,
-  FadeInUp,
-  ZoomIn,
   Easing,
   useSharedValue,
   useAnimatedStyle,
   withDelay,
   withTiming,
+  withSpring,
 } from 'react-native-reanimated';
 import type { ViewStyle } from 'react-native';
 import { useCards } from '@/context/CardContext';
@@ -75,6 +73,33 @@ function HeroSide({ delay, side = 1, style, children }: HeroProps) {
 }
 
 /**
+ * Fade + slide / zoom, driven by shared values and run exactly once on mount.
+ * Not an `entering` preset: on web those compile to CSS keyframe animations,
+ * which restart every time the screen is hidden and shown again (e.g. coming
+ * back from a pushed card detail page). A shared value only moves when we
+ * tell it to, so the entrance plays once per mount, as intended.
+ */
+function Driven({ delay, kind, style, children }: HeroProps & { kind: Kind }) {
+  const progress = useSharedValue(0);
+  useEffect(() => {
+    const anim =
+      kind === 'zoom' ? withSpring(1, { damping: 16, stiffness: 140 })
+      : kind === 'drop' ? withSpring(1, { damping: 12, stiffness: 180 })
+      : withTiming(1, { duration: kind === 'down' ? 500 : 550, easing: soft });
+    progress.value = withDelay(delay, anim);
+  }, []);
+  const animatedStyle = useAnimatedStyle(() => {
+    const p = progress.value;
+    const transform =
+      kind === 'zoom' ? [{ scale: p }]
+      : kind === 'up' ? [{ translateY: 20 * (1 - p) }]
+      : [{ translateY: -20 * (1 - p) }]; // 'down' and 'drop' come from above
+    return { opacity: Math.min(1, p), transform };
+  });
+  return <Animated.View style={[style, animatedStyle]}>{children}</Animated.View>;
+}
+
+/**
  * Entrance animation wrapper. Every element on the results page comes in
  * through this, so the whole page shares one motion vocabulary.
  * Disabled globally via Paramètres → Animations.
@@ -86,17 +111,7 @@ export function Reveal({ delay = 0, kind = 'up', side = 1, style, children }: Re
   }
   if (kind === 'hero') return <Hero delay={delay} style={style}>{children}</Hero>;
   if (kind === 'heroSide') return <HeroSide delay={delay} side={side} style={style}>{children}</HeroSide>;
-  // Presets only below: custom Keyframes are unsafe on web (see Hero).
-  const entering =
-    kind === 'down' ? FadeInDown.delay(delay).duration(500)
-    : kind === 'zoom' ? ZoomIn.delay(delay).springify().damping(16).stiffness(140)
-    : kind === 'drop' ? FadeInDown.delay(delay).springify().damping(12).stiffness(180)
-    : FadeInUp.delay(delay).duration(550);
-  return (
-    <Animated.View entering={entering} style={style}>
-      {children}
-    </Animated.View>
-  );
+  return <Driven delay={delay} kind={kind} style={style}>{children}</Driven>;
 }
 
 /** Shared timings so both views feel like one sequence. */
