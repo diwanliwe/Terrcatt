@@ -1,26 +1,16 @@
-import React, { useMemo, useState, useCallback, useRef } from 'react';
+import React, { useState, useCallback, useRef } from 'react';
 import { StyleSheet, View, Text, Pressable } from 'react-native';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
-import { useCards, CARDS } from '@/context/CardContext';
-import {
-  buildEntries,
-  sortByInterest,
-  normalizeCompareScores,
-  ResultEntry,
-} from '@/components/results/resultsData';
-import { GroundTruthModal } from '@/components/results/GroundTruthModal';
+import { useResultEntries } from '@/components/results/useResultEntries';
 import { CarouselView } from '@/components/results/CarouselView';
 import { type, space } from '@/components/results/theme';
 
 export default function ResultsScreen() {
-  const { state, setComment } = useCards();
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { gameMode } = state;
-
-  const [selected, setSelected] = useState<ResultEntry | null>(null);
+  const { byInterest, ratedCount, isComplete, total } = useResultEntries();
 
   // Replay the entrance choreography when the user comes back to this tab.
   // Skip the initial mount (the first render already animates) and ignore
@@ -38,47 +28,17 @@ export default function ResultsScreen() {
     }, []),
   );
 
-  const rawScores =
-    gameMode === 'swipe' ? state.swipeScores :
-    gameMode === 'compare' ? state.compareScores :
-    state.ratingScores;
-
-  const scores = useMemo(
-    () => (gameMode === 'compare' ? normalizeCompareScores(rawScores) : rawScores),
-    [rawScores, gameMode],
-  );
-
-  // Terrain truth is only revealed once every card has been rated,
-  // so that seeing the reference can't bias the remaining answers.
-  const ratedCount = Object.keys(scores).length;
-  const isComplete =
-    gameMode === 'rate' ? state.currentRatingIndex >= CARDS.length : ratedCount >= CARDS.length;
-
-  const entries = useMemo(() => buildEntries(scores, state.comments), [scores, state.comments]);
-  const byInterest = useMemo(() => sortByInterest(entries), [entries]);
-
-  // Keep the open modal in sync if a comment is saved while it's open
-  const selectedEntry = selected ? entries.find((e) => e.card.id === selected.card.id) ?? null : null;
-
   return (
     <View style={[styles.container, { paddingTop: insets.top + 10 }]}>
       {isComplete ? (
-        <CarouselView key={`carousel-${visit}`} entries={byInterest} onSelect={setSelected} />
+        <CarouselView key={`carousel-${visit}`} entries={byInterest} onSelect={(e) => router.push({ pathname: "/card/[id]", params: { id: String(e.card.id) } })} />
       ) : (
         <LockedState
           rated={ratedCount}
-          total={CARDS.length}
+          total={total}
           onContinue={() => router.navigate('/')}
         />
       )}
-
-      <GroundTruthModal
-        visible={selectedEntry !== null}
-        entry={selectedEntry}
-        comment={selectedEntry?.comment}
-        onComment={(c) => { if (selectedEntry) setComment(selectedEntry.card.id, c); }}
-        onClose={() => setSelected(null)}
-      />
     </View>
   );
 }

@@ -1,12 +1,10 @@
 import React from 'react';
 import { StyleSheet, View, Text, Image, Pressable } from 'react-native';
-import FontAwesome from '@expo/vector-icons/FontAwesome';
 import {
   ResultEntry,
   AGREEMENT_META,
   scoreToColor,
   formatScore,
-  hasComment,
 } from './resultsData';
 import { type, space, surface } from './theme';
 
@@ -74,11 +72,6 @@ export function ResultCard({ entry, width, onPress, detailed = true, imageRatio 
     >
       <View style={[styles.imageWrap, { height: imageHeight }]}>
         <Image source={entry.card.image} style={styles.image} resizeMode="cover" />
-        {hasComment(entry) && (
-          <View style={styles.commentTag}>
-            <FontAwesome name="comment" size={12} color="#fff" />
-          </View>
-        )}
       </View>
 
       <View style={styles.body}>
@@ -112,17 +105,6 @@ const styles = StyleSheet.create({
   pressed: { opacity: 0.85 },
   imageWrap: { width: '100%', backgroundColor: '#000' },
   image: { width: '100%', height: '100%' },
-  commentTag: {
-    position: 'absolute',
-    top: 10,
-    right: 10,
-    width: 26,
-    height: 26,
-    borderRadius: 13,
-    backgroundColor: '#C4956A',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
   body: { paddingHorizontal: space.sm, paddingVertical: space.sm, gap: space.xs },
   name: { ...type.bodyStrong, textAlign: 'center' },
   scoresRow: {

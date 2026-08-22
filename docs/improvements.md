@@ -102,7 +102,7 @@ completion screen forever. The app becomes single-use. To think through:
   engagement. Maybe ratings stay final but the tab stays *alive* (explore, learn,
   share) rather than replayable.
 
-## 8. Card detail — page instead of modal — 🔜 NEXT
+## 8. Card detail — page instead of modal — ✅ DONE (2026-08-22)
 
 Current: tapping a result card opens a bottom-sheet modal (`components/results/
 GroundTruthModal.tsx`) with the two scores, the study's explanation and a
@@ -121,6 +121,16 @@ To explore:
   actually read the detail pages.
 - Reuse the results vocabulary: *Votre regard* / *Regard de l'étude*, perspective
   colour as accent, same type scale.
+
+Implemented: `app/card/[id].tsx` (stack route, own back row, no native header),
+pushed from the carousel. Hero image framed in the perspective colour, title,
+perspective badge + one-line description, *Votre regard* / *Regard de l'étude*
+score columns, « Ce que l'étude a observé », and a prev/next pager that follows
+the carousel order. Deep links before completion show a locked message.
+Score/entry derivation moved to `components/results/useResultEntries.ts`, shared
+with the Résultats tab. `GroundTruthModal` and the comment/voice UI are gone; the
+`comments` reducer slice stays. `expo-av` is now unused — drop it when item 6 lands
+if voice notes don't come back.
 
 ## 9. Hosting + first client review wave — 🔜 groundwork
 

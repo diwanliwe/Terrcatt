@@ -164,7 +164,3 @@ export function buildEntries(
 export function sortByInterest(entries: ResultEntry[]): ResultEntry[] {
   return [...entries].sort((a, b) => b.gap - a.gap || a.rank - b.rank);
 }
-
-export function hasComment(entry: ResultEntry): boolean {
-  return !!(entry.comment && (entry.comment.text || entry.comment.audioUri));
-}
