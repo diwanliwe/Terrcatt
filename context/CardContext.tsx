@@ -44,7 +44,7 @@ export interface UserProfile {
  * research side needs (revisions, order effects) and can't be rebuilt later.
  */
 export interface InteractionEvent {
-  type: 'rate' | 'swipe1' | 'swipe2' | 'compare' | 'profile' | 'comment' | 'run';
+  type: 'rate' | 'swipe1' | 'swipe2' | 'compare' | 'profile' | 'comment' | 'run' | 'onboarding';
   at: number; // epoch ms
   /** Which playthrough this event belongs to (1-based) — runs must never be mixed in analysis. */
   run: number;
@@ -62,6 +62,8 @@ interface CardState {
   createdAt: number;
   /** 1-based playthrough counter; « Recommencer » starts a new run. */
   runIndex: number;
+  /** When the qualification onboarding was finished; null gates the whole app. */
+  onboardingCompletedAt: number | null;
   events: InteractionEvent[];
   gameMode: GameMode;
   swipeScores: Record<number, number>;
@@ -97,6 +99,7 @@ type CardAction =
   | { type: 'SET_ANIMATIONS_ENABLED'; enabled: boolean }
   | { type: 'HYDRATE'; state: CardState }
   | { type: 'NEW_RUN' }
+  | { type: 'COMPLETE_ONBOARDING' }
   | { type: 'RESET_ALL' };
 
 interface CardContextType {
@@ -121,6 +124,8 @@ interface CardContextType {
   resetAll: () => Promise<void>;
   /** Clears the game and starts the next run for the same participant. */
   startNewRun: () => void;
+  /** Marks the qualification onboarding as done, unlocking the app. */
+  completeOnboarding: () => void;
 }
 
 // Initial state
@@ -129,6 +134,7 @@ const initialState: CardState = {
   deviceSecret: '',
   createdAt: 0,
   runIndex: 1,
+  onboardingCompletedAt: null,
   events: [],
   gameMode: 'rate',
   swipeScores: {},
@@ -164,6 +170,9 @@ function cardReducer(state: CardState, action: CardAction): CardState {
       return action.state;
     case 'RESET_ALL':
       return freshState();
+    case 'COMPLETE_ONBOARDING':
+      if (state.onboardingCompletedAt) return state; // revisits from Paramètres don't re-log
+      return { ...logged(state, { type: 'onboarding' }), onboardingCompletedAt: Date.now() };
     case 'NEW_RUN': {
       // Same participant, next playthrough: game progress is cleared, but the
       // identity and the full event history (tagged per run) are kept.
@@ -311,7 +320,12 @@ export function CardProvider({ children }: { children: ReactNode }) {
     load<CardState>().then((stored) => {
       if (cancelled) return;
       // runIndex arrived after the first persisted snapshots: default old records to run 1.
-      dispatch({ type: 'HYDRATE', state: stored ? { ...stored, runIndex: stored.runIndex ?? 1 } : freshState() });
+      dispatch({
+        type: 'HYDRATE',
+        state: stored
+          ? { ...stored, runIndex: stored.runIndex ?? 1, onboardingCompletedAt: stored.onboardingCompletedAt ?? null }
+          : freshState(),
+      });
       setHydrated(true);
       SplashScreen.hideAsync();
     });
@@ -357,6 +371,10 @@ export function CardProvider({ children }: { children: ReactNode }) {
     });
     return () => sub.remove();
   }, [hydrated]);
+
+  const completeOnboarding = () => {
+    dispatch({ type: 'COMPLETE_ONBOARDING' });
+  };
 
   const startNewRun = () => {
     dispatch({ type: 'NEW_RUN' });
@@ -457,6 +475,7 @@ export function CardProvider({ children }: { children: ReactNode }) {
         setAnimationsEnabled,
         resetAll,
         startNewRun,
+        completeOnboarding,
       }}
     >
       {children}

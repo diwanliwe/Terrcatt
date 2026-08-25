@@ -122,8 +122,10 @@ export default function OnboardingScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { width } = useWindowDimensions();
-  const { state, setProfile } = useCards();
+  const { state, setProfile, completeOnboarding } = useCards();
   const [stepIndex, setStepIndex] = useState(0);
+  // Revisit from Paramètres (already qualified) vs first arrival (gated).
+  const isRevisit = state.onboardingCompletedAt !== null;
 
   const contentWidth = Math.min(width, MAX_LAYOUT_WIDTH);
   const imageSize = contentWidth * 0.55;
@@ -131,11 +133,16 @@ export default function OnboardingScreen() {
   const isLastStep = stepIndex === STEPS.length - 1;
 
   const handleClose = () => {
-    router.back();
+    if (isRevisit && router.canGoBack()) {
+      router.back();
+    } else {
+      router.replace('/');
+    }
   };
 
   const goNext = () => {
     if (isLastStep) {
+      completeOnboarding();
       handleClose();
     } else {
       setStepIndex(stepIndex + 1);

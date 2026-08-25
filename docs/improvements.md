@@ -123,6 +123,17 @@ delete idempotent. `.env` holds the bare project URL + `sb_publishable_` key
 env vars in Vercel. Research export: dashboard → `participants` → CSV/JSON, or
 SQL over `snapshot -> 'events'`.
 
+## 6bis. Onboarding gate + qualification columns — ✅ DONE (2026-08-25)
+
+New participants are locked out of the tabs until the qualification onboarding
+is finished: `app/(tabs)/_layout.tsx` redirects to `/onboarding` while
+`onboardingCompletedAt` is null; the flow's last step calls
+`completeOnboarding()` (logged as an `onboarding` event) and unlocks. Revisits
+from Paramètres behave as before. Migration `0003_qualification.sql` promotes
+the qualification to real columns on `participants` (`roles text[]`,
+`territory_link`, `source`, `onboarded_at`), filled by `upsert_participant`
+from the snapshot on every sync.
+
 ## 7. Game page after completion — avoid the permanent dead end
 
 Interim (2026-08-25): the completion screen has a « Recommencer une partie »
