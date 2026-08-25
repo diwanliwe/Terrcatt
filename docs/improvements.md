@@ -78,7 +78,7 @@ Implemented in `app/(tabs)/results.tsx` + `components/results/`:
 - Toggle for haptic feedback on game-loop interactions (rating buttons etc.) —
   and actually add the haptics themselves to the core loop.
 
-## 6. Data: anonymous user + storing all interactions — ✅ CODE DONE (2026-08-22), needs Supabase project
+## 6. Data: anonymous user + storing all interactions — ✅ DONE (2026-08-25, backend live + verified)
 
 Decision already documented in `docs/onboarding/CLAUDE.md` → "Data storage & sync".
 Summary: anonymous UUID created at first launch (no name, no account), offline-first
@@ -107,11 +107,14 @@ on every later write/delete — the public anon key alone can't overwrite or
 read anyone's data. Triggers: debounced 1.5 s after every logged interaction
 + app-foreground when dirty. `resetAll()` deletes the server row then local.
 
-**To do by hand (once):** create the Supabase project in **Frankfurt
-(eu-central-1) or Paris (eu-west-3)**, run the migration in the SQL editor,
-copy URL + anon key into `.env` (see `.env.example`) and into Vercel env for
-item 9. Research export: dashboard → `participants` → CSV/JSON, or a SQL
-query over `snapshot -> 'events'`.
+Backend live 2026-08-25: Supabase project `gcnxupyqnjryrjzeuqyr` (EU), migration
+0001 applied (note: RPC `search_path` must include `extensions` — pgcrypto lives
+there on Supabase). Verified by direct REST probe: upsert + update own row OK,
+wrong-secret overwrite rejected (`not owner`), anon reads blocked by RLS,
+delete idempotent. `.env` holds the bare project URL + `sb_publishable_` key
+(NOT the `/rest/v1/` URL, NOT `sb_secret_`). Still to do with item 9: same two
+env vars in Vercel. Research export: dashboard → `participants` → CSV/JSON, or
+SQL over `snapshot -> 'events'`.
 
 ## 7. Game page after completion — avoid the permanent dead end
 
