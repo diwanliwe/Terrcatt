@@ -73,8 +73,11 @@ Implemented in `app/(tabs)/results.tsx` + `components/results/`:
   - Send feedback (mailto or simple form).
   - Legal / privacy page (required anyway per the GDPR notes in the onboarding
     spec).
-  - "Delete my data" (the anonymous-user equivalent of delete account — GDPR
-    erasure; wipes local data + the server record for this UUID once sync exists).
+  - ~~"Delete my data"~~ ✅ DONE (2026-08-25): « Supprimer mes données » in
+    Paramètres (two-step confirm) → `resetAll()`: deletes the server row
+    (`delete_participant`), wipes local storage, mints a new participant →
+    gate sends them through onboarding as a fresh user. Also the dev tool for
+    clearing stale local state.
 - Toggle for haptic feedback on game-loop interactions (rating buttons etc.) —
   and actually add the haptics themselves to the core loop.
 

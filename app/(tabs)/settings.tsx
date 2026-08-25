@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { StyleSheet, View, Text, ScrollView, Pressable, Linking, Switch } from 'react-native';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { useRouter } from 'expo-router';
@@ -8,7 +8,8 @@ const CONTACT_EMAIL = 'marianne.cohen@sorbonne-universite.fr';
 
 export default function SettingsScreen() {
   const router = useRouter();
-  const { state, setAnimationsEnabled } = useCards();
+  const { state, setAnimationsEnabled, resetAll } = useCards();
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
 
   const handleContact = () => {
     Linking.openURL(`mailto:${CONTACT_EMAIL}?subject=Projet Terrcatt – Prise de contact`);
@@ -41,6 +42,36 @@ export default function SettingsScreen() {
             thumbColor="#fff"
           />
         </View>
+      </View>
+
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Mes données</Text>
+        <Text style={styles.paragraph}>
+          Vos réponses sont enregistrées anonymement. Supprimer vos données efface tout,
+          ici et sur nos serveurs, et redémarre l'application de zéro.
+        </Text>
+        <Pressable
+          style={({ pressed }) => [
+            styles.deleteButton,
+            confirmingDelete && styles.deleteButtonConfirm,
+            pressed && { opacity: 0.7 },
+          ]}
+          onPress={() => {
+            if (!confirmingDelete) { setConfirmingDelete(true); return; }
+            setConfirmingDelete(false);
+            resetAll();
+          }}
+        >
+          <FontAwesome name="trash-o" size={16} color={confirmingDelete ? '#fff' : '#D9534F'} />
+          <Text style={[styles.deleteButtonText, confirmingDelete && { color: '#fff' }]}>
+            {confirmingDelete ? 'Confirmer la suppression définitive' : 'Supprimer mes données'}
+          </Text>
+        </Pressable>
+        {confirmingDelete && (
+          <Pressable onPress={() => setConfirmingDelete(false)} hitSlop={8}>
+            <Text style={styles.deleteCancel}>Annuler</Text>
+          </Pressable>
+        )}
       </View>
 
       <View style={styles.section}>
@@ -190,5 +221,31 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: '#aaa',
     marginTop: 10,
+  },
+  deleteButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    borderWidth: 1,
+    borderColor: '#D9534F',
+    borderRadius: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+  },
+  deleteButtonConfirm: {
+    backgroundColor: '#D9534F',
+  },
+  deleteButtonText: {
+    color: '#D9534F',
+    fontSize: 15,
+    fontWeight: '600',
+  },
+  deleteCancel: {
+    color: '#8A8580',
+    fontSize: 14,
+    textAlign: 'center',
+    marginTop: 10,
+    textDecorationLine: 'underline',
   },
 });
