@@ -30,7 +30,7 @@ create or replace function public.upsert_participant(
 ) returns void
 language plpgsql
 security definer
-set search_path = public
+set search_path = public, extensions
 as $$
 declare
   existing_hash text;
@@ -64,7 +64,7 @@ create or replace function public.delete_participant(p_user_id uuid, p_secret te
 returns void
 language plpgsql
 security definer
-set search_path = public
+set search_path = public, extensions
 as $$
 begin
   delete from participants
