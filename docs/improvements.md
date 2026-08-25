@@ -118,6 +118,12 @@ SQL over `snapshot -> 'events'`.
 
 ## 7. Game page after completion — avoid the permanent dead end
 
+Interim (2026-08-25): the completion screen has a « Recommencer une partie »
+text button → `startNewRun()`: same participant, `runIndex` increments, game
+progress + comments cleared, identity and event history kept. Every event is
+tagged with its `run` so playthroughs never mix in analysis. Keep or restyle
+this button when designing the real post-completion state below.
+
 The game is one-shot by design (no reset button in the finished version), but that
 creates a problem: once you've rated the 15 cards, the Jeu tab is stuck on the
 completion screen forever. The app becomes single-use. To think through:

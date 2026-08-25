@@ -24,7 +24,7 @@ const EXIT_MS = 260;
 const ENTER_MS = 200;
 
 export function RateMode() {
-  const { state, rateCard, nextRatingCard } = useCards();
+  const { state, rateCard, nextRatingCard, startNewRun } = useCards();
   const router = useRouter();
   const { width } = useWindowDimensions();
   const currentIndex = state.currentRatingIndex;
@@ -115,6 +115,12 @@ export function RateMode() {
               onPress={() => router.push('/results')}
             >
               <Text style={styles.resultsButtonText}>Voir mes résultats</Text>
+            </Pressable>
+            <Pressable
+              style={({ pressed }) => [styles.replayButton, pressed && { opacity: 0.6 }]}
+              onPress={startNewRun}
+            >
+              <Text style={styles.replayButtonText}>Recommencer une partie</Text>
             </Pressable>
           </Animated.View>
         ) : (
@@ -212,6 +218,17 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 17,
     fontWeight: '600',
+  },
+  replayButton: {
+    marginTop: 14,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+  },
+  replayButtonText: {
+    color: '#8A8580',
+    fontSize: 15,
+    fontWeight: '600',
+    textDecorationLine: 'underline',
   },
   buttonsContainer: {
     width: '100%',

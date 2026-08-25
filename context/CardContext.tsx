@@ -44,8 +44,10 @@ export interface UserProfile {
  * research side needs (revisions, order effects) and can't be rebuilt later.
  */
 export interface InteractionEvent {
-  type: 'rate' | 'swipe1' | 'swipe2' | 'compare' | 'profile' | 'comment';
+  type: 'rate' | 'swipe1' | 'swipe2' | 'compare' | 'profile' | 'comment' | 'run';
   at: number; // epoch ms
+  /** Which playthrough this event belongs to (1-based) — runs must never be mixed in analysis. */
+  run: number;
   cardId?: number;
   value?: number;
   /** compare: the losing card; 0 = tie. */
@@ -58,6 +60,8 @@ interface CardState {
   /** Random per-device secret proving ownership of the server row. Not part of the snapshot. */
   deviceSecret: string;
   createdAt: number;
+  /** 1-based playthrough counter; « Recommencer » starts a new run. */
+  runIndex: number;
   events: InteractionEvent[];
   gameMode: GameMode;
   swipeScores: Record<number, number>;
@@ -92,6 +96,7 @@ type CardAction =
   | { type: 'SET_PROFILE'; profile: Partial<UserProfile> }
   | { type: 'SET_ANIMATIONS_ENABLED'; enabled: boolean }
   | { type: 'HYDRATE'; state: CardState }
+  | { type: 'NEW_RUN' }
   | { type: 'RESET_ALL' };
 
 interface CardContextType {
@@ -114,6 +119,8 @@ interface CardContextType {
   setAnimationsEnabled: (enabled: boolean) => void;
   /** Wipes every local trace and starts as a brand-new anonymous participant. */
   resetAll: () => Promise<void>;
+  /** Clears the game and starts the next run for the same participant. */
+  startNewRun: () => void;
 }
 
 // Initial state
@@ -121,6 +128,7 @@ const initialState: CardState = {
   userId: '',
   deviceSecret: '',
   createdAt: 0,
+  runIndex: 1,
   events: [],
   gameMode: 'rate',
   swipeScores: {},
@@ -145,8 +153,8 @@ function freshState(): CardState {
   return { ...initialState, userId: createUserId(), deviceSecret: createDeviceSecret(), createdAt: Date.now() };
 }
 
-function logged(state: CardState, event: Omit<InteractionEvent, 'at'>): CardState {
-  return { ...state, events: [...state.events, { ...event, at: Date.now() }] };
+function logged(state: CardState, event: Omit<InteractionEvent, 'at' | 'run'>): CardState {
+  return { ...state, events: [...state.events, { ...event, at: Date.now(), run: state.runIndex }] };
 }
 
 // Reducer
@@ -156,6 +164,26 @@ function cardReducer(state: CardState, action: CardAction): CardState {
       return action.state;
     case 'RESET_ALL':
       return freshState();
+    case 'NEW_RUN': {
+      // Same participant, next playthrough: game progress is cleared, but the
+      // identity and the full event history (tagged per run) are kept.
+      const next = state.runIndex + 1;
+      return {
+        ...state,
+        runIndex: next,
+        events: [...state.events, { type: 'run', at: Date.now(), value: next, run: next }],
+        swipeScores: {},
+        swipeFirstPass: {},
+        swipeStep: 1,
+        currentSwipeIndex: 0,
+        currentSwipeStep2Index: 0,
+        compareScores: {},
+        comparisonCount: 0,
+        ratingScores: {},
+        currentRatingIndex: 0,
+        comments: {},
+      };
+    }
     case 'SET_GAME_MODE':
       return {
         ...state,
@@ -282,7 +310,8 @@ export function CardProvider({ children }: { children: ReactNode }) {
     let cancelled = false;
     load<CardState>().then((stored) => {
       if (cancelled) return;
-      dispatch({ type: 'HYDRATE', state: stored ?? freshState() });
+      // runIndex arrived after the first persisted snapshots: default old records to run 1.
+      dispatch({ type: 'HYDRATE', state: stored ? { ...stored, runIndex: stored.runIndex ?? 1 } : freshState() });
       setHydrated(true);
       SplashScreen.hideAsync();
     });
@@ -324,6 +353,10 @@ export function CardProvider({ children }: { children: ReactNode }) {
     });
     return () => sub.remove();
   }, [hydrated]);
+
+  const startNewRun = () => {
+    dispatch({ type: 'NEW_RUN' });
+  };
 
   const resetAll = async () => {
     if (syncTimer.current) clearTimeout(syncTimer.current);
@@ -419,6 +452,7 @@ export function CardProvider({ children }: { children: ReactNode }) {
         setProfile,
         setAnimationsEnabled,
         resetAll,
+        startNewRun,
       }}
     >
       {children}
