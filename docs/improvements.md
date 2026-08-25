@@ -111,8 +111,8 @@ Relational events (2026-08-25): migration `0002_events.sql` adds
 `events` — one row per interaction (`user_id, idx, run, type,
 card_id, value, at`), append-only via `append_events` RPC (same device-secret
 ownership check), idempotent on `(user_id, idx)`, cascade-deleted with the
-participant. The snapshot in `participants` remains the sync source of truth;
-this table is the analysis-friendly mirror.
+participant. Events live ONLY here — the snapshot pushed
+to `participants` excludes the local event log (profile + current-run scores).
 
 Backend live 2026-08-25: Supabase project `gcnxupyqnjryrjzeuqyr` (EU), migration
 0001 applied (note: RPC `search_path` must include `extensions` — pgcrypto lives

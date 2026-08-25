@@ -336,10 +336,12 @@ export function CardProvider({ children }: { children: ReactNode }) {
   latest.current = state;
   const flush = async () => {
     const s = latest.current;
-    const { deviceSecret, ...snapshot } = s;
+    // The event log is NOT part of the snapshot: events are stored only in
+    // the relational events table. The secret never leaves the device.
+    const { deviceSecret, events, ...snapshot } = s;
     // Snapshot first (it creates the participant row the events reference).
     const snapOk = await pushSnapshot(s.userId, deviceSecret, snapshot);
-    const eventsOk = snapOk && (await pushEvents(s.userId, deviceSecret, s.events));
+    const eventsOk = snapOk && (await pushEvents(s.userId, deviceSecret, events));
     if (snapOk && eventsOk) dirty.current = false;
   };
   useEffect(() => {

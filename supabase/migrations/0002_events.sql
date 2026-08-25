@@ -4,6 +4,10 @@
 -- Append-only and idempotent: idx is the event's position in the device's
 -- local log, so re-sending the whole log after a retry can never duplicate.
 
+-- Dev-phase fresh start: wipe existing participants (old snapshots still
+-- carried the event log inside the jsonb; from now on events live here only).
+truncate table public.participants cascade;
+
 create table if not exists public.events (
   user_id  uuid not null references public.participants(user_id) on delete cascade,
   idx      integer not null,
