@@ -27,7 +27,7 @@ export async function pushSnapshot(
 }
 
 /**
- * Mirror the local event log into the relational participant_events table.
+ * Mirror the local event log into the relational events table.
  * Sends the whole log each time; the server's (user_id, idx) key makes it
  * idempotent, so retries and overlaps are harmless.
  */

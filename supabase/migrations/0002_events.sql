@@ -1,9 +1,10 @@
--- One row per interaction event (vote, swipe, comparison, run start, ...).
+-- One row per interaction event (vote, swipe, comparison, run start, ...),
+-- for every participant.
 -- Relational mirror of snapshot->'events' so research queries are plain SQL.
 -- Append-only and idempotent: idx is the event's position in the device's
 -- local log, so re-sending the whole log after a retry can never duplicate.
 
-create table if not exists public.participant_events (
+create table if not exists public.events (
   user_id  uuid not null references public.participants(user_id) on delete cascade,
   idx      integer not null,
   run      integer not null,
@@ -15,7 +16,7 @@ create table if not exists public.participant_events (
   primary key (user_id, idx)
 );
 
-alter table public.participant_events enable row level security;
+alter table public.events enable row level security;
 -- No policies: anon can neither read nor write directly; writes go through the
 -- RPC below, reads are for the research team via dashboard / service role.
 
@@ -36,7 +37,7 @@ begin
     raise exception 'not owner';
   end if;
 
-  insert into participant_events (user_id, idx, run, type, card_id, value, other_id, at)
+  insert into events (user_id, idx, run, type, card_id, value, other_id, at)
   select p_user_id,
          (e.value->>'idx')::int,
          coalesce((e.value->>'run')::int, 1),
