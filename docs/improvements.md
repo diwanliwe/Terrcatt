@@ -107,6 +107,13 @@ on every later write/delete — the public anon key alone can't overwrite or
 read anyone's data. Triggers: debounced 1.5 s after every logged interaction
 + app-foreground when dirty. `resetAll()` deletes the server row then local.
 
+Relational events (2026-08-25): migration `0002_participant_events.sql` adds
+`participant_events` — one row per interaction (`user_id, idx, run, type,
+card_id, value, at`), append-only via `append_events` RPC (same device-secret
+ownership check), idempotent on `(user_id, idx)`, cascade-deleted with the
+participant. The snapshot in `participants` remains the sync source of truth;
+this table is the analysis-friendly mirror.
+
 Backend live 2026-08-25: Supabase project `gcnxupyqnjryrjzeuqyr` (EU), migration
 0001 applied (note: RPC `search_path` must include `extensions` — pgcrypto lives
 there on Supabase). Verified by direct REST probe: upsert + update own row OK,

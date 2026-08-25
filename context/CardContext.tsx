@@ -2,7 +2,7 @@ import React, { createContext, useContext, useReducer, useEffect, useRef, useSta
 import { AppState } from 'react-native';
 import * as SplashScreen from 'expo-splash-screen';
 import { load, save, clear, createUserId, createDeviceSecret } from './persistence';
-import { pushSnapshot, deleteSnapshot } from './sync';
+import { pushSnapshot, pushEvents, deleteSnapshot } from './sync';
 import { ImageSourcePropType } from 'react-native';
 
 // Types
@@ -337,8 +337,10 @@ export function CardProvider({ children }: { children: ReactNode }) {
   const flush = async () => {
     const s = latest.current;
     const { deviceSecret, ...snapshot } = s;
-    const ok = await pushSnapshot(s.userId, deviceSecret, snapshot);
-    if (ok) dirty.current = false;
+    // Snapshot first (it creates the participant row the events reference).
+    const snapOk = await pushSnapshot(s.userId, deviceSecret, snapshot);
+    const eventsOk = snapOk && (await pushEvents(s.userId, deviceSecret, s.events));
+    if (snapOk && eventsOk) dirty.current = false;
   };
   useEffect(() => {
     if (!hydrated) return;
