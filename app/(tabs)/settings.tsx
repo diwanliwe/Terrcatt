@@ -18,63 +18,6 @@ export default function SettingsScreen() {
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent}>
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Introduction</Text>
-        <Pressable
-          style={({ pressed }) => [styles.onboardingButton, pressed && styles.onboardingButtonPressed]}
-          onPress={() => router.push('/onboarding')}
-        >
-          <FontAwesome name="play-circle" size={18} color="#C4956A" />
-          <Text style={styles.onboardingButtonText}>Voir l'introduction</Text>
-        </Pressable>
-      </View>
-
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Affichage</Text>
-        <View style={styles.toggleRow}>
-          <View style={styles.toggleText}>
-            <Text style={styles.toggleLabel}>Animations</Text>
-            <Text style={styles.toggleHint}>Apparition animée des résultats</Text>
-          </View>
-          <Switch
-            value={state.animationsEnabled}
-            onValueChange={setAnimationsEnabled}
-            trackColor={{ true: '#C4956A', false: '#DDD' }}
-            thumbColor="#fff"
-          />
-        </View>
-      </View>
-
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Mes données</Text>
-        <Text style={styles.paragraph}>
-          Vos réponses sont enregistrées anonymement. Supprimer vos données efface tout,
-          ici et sur nos serveurs, et redémarre l'application de zéro.
-        </Text>
-        <Pressable
-          style={({ pressed }) => [
-            styles.deleteButton,
-            confirmingDelete && styles.deleteButtonConfirm,
-            pressed && { opacity: 0.7 },
-          ]}
-          onPress={() => {
-            if (!confirmingDelete) { setConfirmingDelete(true); return; }
-            setConfirmingDelete(false);
-            resetAll();
-          }}
-        >
-          <FontAwesome name="trash-o" size={16} color={confirmingDelete ? '#fff' : '#D9534F'} />
-          <Text style={[styles.deleteButtonText, confirmingDelete && { color: '#fff' }]}>
-            {confirmingDelete ? 'Confirmer la suppression définitive' : 'Supprimer mes données'}
-          </Text>
-        </Pressable>
-        {confirmingDelete && (
-          <Pressable onPress={() => setConfirmingDelete(false)} hitSlop={8}>
-            <Text style={styles.deleteCancel}>Annuler</Text>
-          </Pressable>
-        )}
-      </View>
-
-      <View style={styles.section}>
         <Text style={styles.sectionTitle}>À propos</Text>
         <Text style={styles.paragraph}>
           Cette application est un prototype numérique d'une méthode participative de tri de cartes
@@ -115,6 +58,64 @@ export default function SettingsScreen() {
         </Text>
       </View>
 
+      <View style={styles.divider} />
+
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Préférences</Text>
+        <View style={styles.prefRow}>
+          <View style={styles.prefText}>
+            <Text style={styles.prefLabel}>Animations</Text>
+            <Text style={styles.prefHint}>Apparition animée des résultats</Text>
+          </View>
+          <Switch
+            value={state.animationsEnabled}
+            onValueChange={setAnimationsEnabled}
+            trackColor={{ true: '#C4956A', false: '#DDD' }}
+            thumbColor="#fff"
+          />
+        </View>
+        <Pressable
+          style={({ pressed }) => [styles.prefRow, pressed && { opacity: 0.6 }]}
+          onPress={() => router.push('/onboarding')}
+        >
+          <View style={styles.prefText}>
+            <Text style={styles.prefLabel}>Revoir l'introduction</Text>
+            <Text style={styles.prefHint}>Rejouer le tutoriel de démarrage</Text>
+          </View>
+          <FontAwesome name="chevron-right" size={14} color="#BBB" />
+        </Pressable>
+      </View>
+
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Mes données</Text>
+        <Text style={styles.paragraph}>
+          Vos réponses sont enregistrées anonymement. Supprimer vos données efface tout,
+          ici et sur nos serveurs, et redémarre l'application de zéro.
+        </Text>
+        <Pressable
+          style={({ pressed }) => [
+            styles.deleteButton,
+            confirmingDelete && styles.deleteButtonConfirm,
+            pressed && { opacity: 0.7 },
+          ]}
+          onPress={() => {
+            if (!confirmingDelete) { setConfirmingDelete(true); return; }
+            setConfirmingDelete(false);
+            resetAll();
+          }}
+        >
+          <FontAwesome name="trash-o" size={16} color={confirmingDelete ? '#fff' : '#D9534F'} />
+          <Text style={[styles.deleteButtonText, confirmingDelete && { color: '#fff' }]}>
+            {confirmingDelete ? 'Confirmer la suppression définitive' : 'Supprimer mes données'}
+          </Text>
+        </Pressable>
+        {confirmingDelete && (
+          <Pressable onPress={() => setConfirmingDelete(false)} hitSlop={8}>
+            <Text style={styles.deleteCancel}>Annuler</Text>
+          </Pressable>
+        )}
+      </View>
+
       <Text style={styles.version}>Terrcatt v1.0</Text>
     </ScrollView>
   );
@@ -144,35 +145,20 @@ const styles = StyleSheet.create({
     color: '#555',
     marginBottom: 10,
   },
-  toggleRow: {
+  divider: {
+    height: 1,
+    backgroundColor: '#EAE5DF',
+    marginBottom: 24,
+  },
+  prefRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingVertical: 6,
+    paddingVertical: 10,
   },
-  toggleText: { flex: 1, marginRight: 16 },
-  toggleLabel: { fontSize: 16, fontWeight: '600', color: '#333' },
-  toggleHint: { fontSize: 13, color: '#888', marginTop: 2 },
-  onboardingButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1.5,
-    borderColor: '#C4956A',
-    backgroundColor: '#FFF8F2',
-    paddingHorizontal: 24,
-    paddingVertical: 12,
-    borderRadius: 8,
-    gap: 8,
-  },
-  onboardingButtonPressed: {
-    opacity: 0.7,
-  },
-  onboardingButtonText: {
-    color: '#C4956A',
-    fontSize: 16,
-    fontWeight: '600',
-  },
+  prefText: { flex: 1, marginRight: 16 },
+  prefLabel: { fontSize: 16, fontWeight: '600', color: '#333' },
+  prefHint: { fontSize: 13, color: '#888', marginTop: 2 },
   ctaBox: {
     borderWidth: 1.5,
     borderColor: '#C4956A',
