@@ -1,10 +1,47 @@
 import React, { useState } from 'react';
-import { StyleSheet, View, Text, ScrollView, Pressable, Linking, Switch } from 'react-native';
+import { StyleSheet, View, Text, ScrollView, Pressable, Linking, Switch, Platform } from 'react-native';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { useRouter } from 'expo-router';
 import { useCards } from '@/context/CardContext';
 
 const CONTACT_EMAIL = 'marianne.cohen@sorbonne-universite.fr';
+
+// Research team shown in « L'équipe ». Edit this list once the client validates
+// names and roles (meeting of 25 Sept 2026).
+// Published work behind the game. The study scores players compare themselves
+// with come from these studies.
+const PUBLICATIONS: { title: string; detail: string; url: string }[] = [
+  {
+    title: 'Resilience of Terraced Landscapes to Human and Natural Impacts',
+    detail: 'Le Vot, Cohen, Nowak, Passy, Sumera. Land, 2024. Accès libre.',
+    url: 'https://doi.org/10.3390/land13050592',
+  },
+  {
+    title: 'Do Terraced Landscapes Reduce Erosion?',
+    detail: 'Cohen, Kerverdo, Nowak, Gorini, Rabaute, Le Vot. Prépublication SSRN, 2026.',
+    url: 'https://papers.ssrn.com/sol3/papers.cfm?abstract_id=7029382',
+  },
+  {
+    title: 'Projet STORY',
+    detail: 'Risques et sociétés dans le bassin de la Roya : le programme dont Terrcatt est issu.',
+    url: 'https://projetstory.wordpress.com/',
+  },
+];
+
+// Card illustrations are deposited on HAL (MediHAL) under a Creative Commons
+// licence. TODO: confirm the exact variant (e.g. CC BY 4.0) with the client.
+const ILLUSTRATIONS_CREDIT = {
+  citation: 'Marianne Cohen, Maciej Nowak, Christian Gorini, Titouan Le Vot, Raphaël Kerverdo et al. '
+    + '« Comment préserver et adapter les terrasses de culture au changement climatique ? », 2026.',
+  licence: 'Licence Creative Commons, dépôt HAL (MediHAL).',
+  url: 'https://media.hal.science/view/index/docid/5750828',
+};
+
+const TEAM: { name: string; role: string }[] = [
+  { name: 'Marianne Cohen', role: 'Professeure de biogéographie, laboratoire Médiations, Faculté des Lettres' },
+  { name: 'Christian Gorini', role: 'Professeur de géosciences, ISTeP, Faculté des Sciences et Ingénierie' },
+  { name: 'Titouan Le Vot', role: 'Géographe et géomaticien' },
+];
 
 export default function SettingsScreen() {
   const router = useRouter();
@@ -12,23 +49,46 @@ export default function SettingsScreen() {
   const [confirmingDelete, setConfirmingDelete] = useState(false);
 
   const handleContact = () => {
-    Linking.openURL(`mailto:${CONTACT_EMAIL}?subject=Projet Terrcatt – Prise de contact`);
+    Linking.openURL(`mailto:${CONTACT_EMAIL}?subject=Projet Terrcatt : prise de contact`);
   };
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent}>
+      <View style={styles.projectHeader}>
+        <Text style={styles.projectName}>Projet Terrcatt</Text>
+        <Text style={styles.projectSubtitle}>
+          Terrasses de culture et reconstruction d'un territoire post-catastrophe
+        </Text>
+        <Text style={styles.projectInstitution}>Sorbonne Université</Text>
+      </View>
+
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>À propos</Text>
+        <Text style={styles.sectionTitle}>Un jeu issu de la recherche</Text>
         <Text style={styles.paragraph}>
-          Cette application est un prototype numérique d'une méthode participative de tri de cartes
-          développée dans le cadre du projet Terrcatt (Terrasses de culture et reconstruction d'un
-          territoire post-catastrophe).
+          Ce jeu est la version numérique d'une méthode participative de tri de cartes, conçue
+          par des chercheurs de Sorbonne Université dans le cadre du projet Terrcatt. Vos réponses
+          alimentent directement leurs travaux.
         </Text>
         <Text style={styles.paragraph}>
-          Le projet étudie les ~23 000 terrasses agricoles de la vallée de la Roya (Alpes françaises),
-          largement abandonnées mais jouant un rôle clé dans la résilience face aux événements
-          climatiques extrêmes comme la tempête Alex (octobre 2020).
+          Le projet étudie les quelque 23 000 terrasses agricoles de la vallée de la Roya (Alpes
+          françaises), largement abandonnées mais jouant un rôle clé dans la résilience face aux
+          événements climatiques extrêmes comme la tempête Alex (octobre 2020).
         </Text>
+        <Text style={styles.paragraph}>
+          Terrcatt est soutenu par l'Alliance Sorbonne Université et prolonge le programme STORY
+          (Risques et sociétés dans le bassin de la Roya), mené en lien avec les associations
+          locales.
+        </Text>
+      </View>
+
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>L'équipe</Text>
+        {TEAM.map((member) => (
+          <View key={member.name} style={styles.memberRow}>
+            <Text style={styles.memberName}>{member.name}</Text>
+            <Text style={styles.memberRole}>{member.role}</Text>
+          </View>
+        ))}
       </View>
 
       <View style={styles.ctaBox}>
@@ -49,13 +109,43 @@ export default function SettingsScreen() {
       </View>
 
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Méthodologie</Text>
+        <Text style={styles.sectionTitle}>Les travaux de recherche</Text>
         <Text style={styles.paragraph}>
-          L'application s'appuie sur des méthodes éprouvées d'aide à la décision participative :
-          analyse multicritère (MCDA), SIG participatif (PGIS), Q-Méthodologie pour identifier
-          les archétypes de points de vue, et comparaisons par paires (CrowdBT) pour agréger
-          les classements collectifs.
+          Le « regard de l'étude » affiché dans vos résultats provient des observations de terrain
+          publiées par l'équipe.
         </Text>
+        {PUBLICATIONS.map((pub) => (
+          <Pressable
+            key={pub.url}
+            style={({ pressed }) => [styles.linkRow, pressed && { opacity: 0.6 }]}
+            onPress={() => Linking.openURL(pub.url)}
+          >
+            <View style={styles.prefText}>
+              <Text style={styles.linkTitle}>{pub.title}</Text>
+              <Text style={styles.memberRole}>{pub.detail}</Text>
+            </View>
+            <FontAwesome name="external-link" size={14} color="#C4956A" />
+          </Pressable>
+        ))}
+      </View>
+
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Crédits des illustrations</Text>
+        <Text style={styles.paragraph}>
+          Les illustrations des cartes sont réalisées d'après des photographies prises sur le
+          terrain dans la Roya par Marianne Cohen. Elles sont mises à disposition sous licence
+          Creative Commons.
+        </Text>
+        <Pressable
+          style={({ pressed }) => [styles.linkRow, pressed && { opacity: 0.6 }]}
+          onPress={() => Linking.openURL(ILLUSTRATIONS_CREDIT.url)}
+        >
+          <View style={styles.prefText}>
+            <Text style={styles.memberRole}>{ILLUSTRATIONS_CREDIT.citation}</Text>
+            <Text style={styles.memberRole}>{ILLUSTRATIONS_CREDIT.licence}</Text>
+          </View>
+          <FontAwesome name="external-link" size={14} color="#C4956A" />
+        </Pressable>
       </View>
 
       <View style={styles.divider} />
@@ -74,6 +164,18 @@ export default function SettingsScreen() {
             thumbColor="#fff"
           />
         </View>
+        {Platform.OS === 'web' && (
+          <Pressable
+            style={({ pressed }) => [styles.prefRow, pressed && { opacity: 0.6 }]}
+            onPress={() => router.push('/install')}
+          >
+            <View style={styles.prefText}>
+              <Text style={styles.prefLabel}>Installer l'application</Text>
+              <Text style={styles.prefHint}>Ajouter Terrcatt à votre écran d'accueil</Text>
+            </View>
+            <FontAwesome name="chevron-right" size={14} color="#BBB" />
+          </Pressable>
+        )}
         <Pressable
           style={({ pressed }) => [styles.prefRow, pressed && { opacity: 0.6 }]}
           onPress={() => router.push('/onboarding')}
@@ -133,6 +235,46 @@ const styles = StyleSheet.create({
   section: {
     marginBottom: 24,
   },
+  projectHeader: {
+    marginBottom: 24,
+    paddingBottom: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: '#EAE5DF',
+  },
+  projectName: {
+    fontSize: 28,
+    fontWeight: '700',
+    color: '#333',
+    marginBottom: 6,
+  },
+  projectSubtitle: {
+    fontSize: 16,
+    lineHeight: 22,
+    color: '#555',
+    marginBottom: 8,
+  },
+  projectInstitution: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#C4956A',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  memberRow: {
+    paddingVertical: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F1EDE7',
+  },
+  linkRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F1EDE7',
+  },
+  linkTitle: { fontSize: 15, fontWeight: '600', color: '#333' },
+  memberName: { fontSize: 16, fontWeight: '600', color: '#333' },
+  memberRole: { fontSize: 13, lineHeight: 18, color: '#777', marginTop: 2 },
   sectionTitle: {
     fontSize: 20,
     fontWeight: '700',

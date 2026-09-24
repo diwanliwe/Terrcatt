@@ -102,7 +102,7 @@ function Driven({ delay, kind, style, children }: HeroProps & { kind: Kind }) {
 /**
  * Entrance animation wrapper. Every element on the results page comes in
  * through this, so the whole page shares one motion vocabulary.
- * Disabled globally via Paramètres → Animations.
+ * Disabled globally via En savoir plus → Animations.
  */
 export function Reveal({ delay = 0, kind = 'up', side = 1, style, children }: RevealProps) {
   const { state } = useCards();
