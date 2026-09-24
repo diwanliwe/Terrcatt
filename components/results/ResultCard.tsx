@@ -1,5 +1,6 @@
 import React from 'react';
 import { StyleSheet, View, Text, Image, Pressable } from 'react-native';
+import { CARD_BG } from '@/components/Card';
 import {
   ResultEntry,
   AGREEMENT_META,
@@ -57,7 +58,7 @@ interface ResultCardProps {
  * Image-first card with the user's vote and terrain truth underneath.
  * Used by the Groupes grid and the Carrousel; width drives everything.
  */
-export function ResultCard({ entry, width, onPress, detailed = true, imageRatio = 0.78 }: ResultCardProps) {
+export function ResultCard({ entry, width, onPress, detailed = true, imageRatio = 1 }: ResultCardProps) {
   const meta = AGREEMENT_META[entry.agreement];
   const imageHeight = width * imageRatio;
 
@@ -103,7 +104,7 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   pressed: { opacity: 0.85 },
-  imageWrap: { width: '100%', backgroundColor: '#000' },
+  imageWrap: { width: '100%', backgroundColor: CARD_BG },
   image: { width: '100%', height: '100%' },
   body: { paddingHorizontal: space.sm, paddingVertical: space.sm, gap: space.xs },
   name: { ...type.bodyStrong, textAlign: 'center' },

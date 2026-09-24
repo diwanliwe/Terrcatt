@@ -101,7 +101,7 @@ Key reducer actions: `SWIPE_FIRST_PASS`, `SWIPE_SECOND_PASS`, `COMPARE_WIN`, `CO
 
 ## Card Data
 
-15 cards defined in `context/CardContext.tsx` with images in `/assets/cards/`. Card images use `require()` for static Expo imports.
+18 cards defined in `context/CardContext.tsx` with square 1024px JPG images in `/assets/cards/` (final designs, Sept 2026; terrain-truth scores in `components/results/resultsData.ts`). Card images use `require()` for static Expo imports.
 
 ## Language
 

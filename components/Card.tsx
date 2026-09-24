@@ -4,6 +4,8 @@ import { CardData } from '@/context/CardContext';
 
 // Cap the reference width so cards stay phone-sized on desktop browsers
 export const MAX_LAYOUT_WIDTH = 500;
+// Background colour of the card artwork, shown behind the image while it loads
+export const CARD_BG = '#E3ECFF';
 
 export function useCardSize() {
   const { width, height } = useWindowDimensions();
@@ -11,8 +13,10 @@ export function useCardSize() {
   // progress header and rating buttons (relevant on short/landscape web windows)
   const maxWidth = Math.min(width, MAX_LAYOUT_WIDTH) * 0.85;
   const maxHeight = height * 0.55;
-  const cardWidth = Math.min(maxWidth, maxHeight / 1.1);
-  return { cardWidth, cardHeight: cardWidth * 1.1 };
+  // Card artwork is square: the title is baked into the image, so the frame
+  // must never crop it.
+  const cardWidth = Math.min(maxWidth, maxHeight);
+  return { cardWidth, cardHeight: cardWidth };
 }
 
 interface CardProps {
@@ -50,7 +54,7 @@ export function Card({ card, style, size = 'normal', rank }: CardProps) {
 const styles = StyleSheet.create({
   shadow: {
     width: 200,
-    height: 280,
+    height: 200,
     borderRadius: 16,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 6 },
@@ -61,7 +65,7 @@ const styles = StyleSheet.create({
   inner: {
     width: '100%',
     height: '100%',
-    backgroundColor: '#000',
+    backgroundColor: CARD_BG,
     borderRadius: 16,
     overflow: 'hidden',
     borderWidth: 1.5,
@@ -69,7 +73,7 @@ const styles = StyleSheet.create({
   },
   shadowSmall: {
     width: 80,
-    height: 112,
+    height: 80,
     borderRadius: 8,
   },
   innerSmall: {
@@ -77,7 +81,7 @@ const styles = StyleSheet.create({
   },
   shadowMedium: {
     width: 140,
-    height: 196,
+    height: 140,
     borderRadius: 12,
   },
   innerMedium: {
@@ -90,10 +94,10 @@ const styles = StyleSheet.create({
     borderRadius: 20,
   },
   image: {
-    ...StyleSheet.absoluteFillObject,
-    width: undefined,
-    height: undefined,
-    transform: [{ scale: 1.05 }],
+    // Explicit size: RN-web renders the asset at its natural size when the
+    // style has no width/height, which crops the square artwork.
+    width: '100%',
+    height: '100%',
   },
   rankBadge: {
     position: 'absolute',

@@ -111,7 +111,7 @@ tutorial — it answers "what am I about to do and why is it worth 5 minutes".
   the scale without a sentence of explanation.
 - Title: **« À vous de jouer »**
 - Bullets:
-  - 🃏 « 15 cartes, chacune une caractéristique du paysage de la Roya. »
+  - 🃏 « 18 cartes, chacune une caractéristique du paysage de la Roya. »
   - 🗳️ « Votez : favorable ou défavorable à la réhabilitation des terrasses ? »
   - 🔭 « À la fin, explorez vos résultats et découvrez l'étude scientifique. »
 - Note box (accent-tinted): « Il n'y a pas de mauvaise réponse : ce jeu croise ce que

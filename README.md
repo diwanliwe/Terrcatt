@@ -30,9 +30,9 @@ L'application propose trois modes de classement :
 
 Un onglet **Résultats** permet de visualiser les classements obtenus avec chaque méthode et de les comparer à la « vérité terrain » scientifique.
 
-## Les 15 cartes
+## Les 18 cartes
 
-Olivier Murette, Pente, Route, TWI, Abandon, Apiculture, Drainage, Faune Sauvage, Hyper-pluviosité, Irrégularité Topographique, Pâture, Stockage Eau, Substrat Géologique, Terrasses, Utilisation Agricole.
+Abandon agricole, Accumulation d'eau au-dessus de la murette, Apiculture, Drainage de l'eau, Moyenne montagne, Murs non entretenus, Oliveraie fleurie, Olivier planté au bord d'une murette, Passé agricole, Patrimoine paysager, Pente très forte, Pluies très abondantes, Proximité d'une route, Rôle de la faune sauvage et de l'abandon agricole, Rôle de la faune sauvage, Stockage de l'eau, Substrat géologique fragile (éboulis), Terrasse fleurie.
 
 ## À qui s'adresse cette application ?
 
@@ -105,7 +105,7 @@ npm run web           # Web browser
 - Three independent scoring systems: swipe (two-pass), compare (pairwise), rating (5-point scale)
 - All state is in-memory only (resets on app restart)
 - Provider hierarchy: GestureHandlerRootView → ThemeProvider → CardProvider
-- 15 cards defined in `CardContext.tsx` with images loaded via `require()`
+- 18 cards defined in `CardContext.tsx` with images loaded via `require()`
 - SwipeableCard supports customizable overlay colors via `colors` prop
 - All user-facing text is in French; code comments and variable names in English
 

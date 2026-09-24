@@ -499,40 +499,51 @@ export interface CardData {
   image: ImageSourcePropType;
 }
 
-// Card images - must use require() for static imports
+// Card images - must use require() for static imports.
+// Final designs (Sept 2026): square 1024px, cropped to the card interior so
+// the title baked into each image is always visible.
 const cardImages: Record<string, ImageSourcePropType> = {
-  'olivier-murette': require('@/assets/cards/OLIVIER-MURETTE.jpg'),
-  'pente': require('@/assets/cards/PENTE.jpg'),
-  'route': require('@/assets/cards/ROUTE.jpg'),
-  'twi': require('@/assets/cards/TWI.jpg'),
-  'abandon': require('@/assets/cards/abandon.jpg'),
+  'abandon-agricole': require('@/assets/cards/abandon-agricole.jpg'),
+  'accumulation-eau': require('@/assets/cards/accumulation-eau.jpg'),
   'apiculture': require('@/assets/cards/apiculture.jpg'),
-  'drainage': require('@/assets/cards/drainage.jpg'),
+  'drainage-eau': require('@/assets/cards/drainage-eau.jpg'),
+  'moyenne-montagne': require('@/assets/cards/moyenne-montagne.jpg'),
+  'murs-non-entretenus': require('@/assets/cards/murs-non-entretenus.jpg'),
+  'oliveraie-fleurie': require('@/assets/cards/oliveraie-fleurie.jpg'),
+  'olivier-murette': require('@/assets/cards/olivier-murette.jpg'),
+  'passe-agricole': require('@/assets/cards/passe-agricole.jpg'),
+  'patrimoine-paysager': require('@/assets/cards/patrimoine-paysager.jpg'),
+  'pente-tres-forte': require('@/assets/cards/pente-tres-forte.jpg'),
+  'pluies-abondantes': require('@/assets/cards/pluies-abondantes.jpg'),
+  'proximite-route': require('@/assets/cards/proximite-route.jpg'),
+  'faune-sauvage-abandon': require('@/assets/cards/faune-sauvage-abandon.jpg'),
   'faune-sauvage': require('@/assets/cards/faune-sauvage.jpg'),
-  'hyper-pluviosite': require('@/assets/cards/hyper-pluviosite.jpg'),
-  'irregularite-topographique': require('@/assets/cards/irregularite-topographique.jpg'),
-  'pature': require('@/assets/cards/pature19s.jpg'),
   'stockage-eau': require('@/assets/cards/stockage-eau.jpg'),
   'substrat-geologique': require('@/assets/cards/substrat-geologique.jpg'),
-  'terrasses': require('@/assets/cards/terrasses.jpg'),
-  'utilagric': require('@/assets/cards/utilagric.jpg'),
+  'terrasse-fleurie': require('@/assets/cards/terrasse-fleurie.jpg'),
 };
 
-// Constants
+/** Card used as the generic "terrace" illustration outside the game (onboarding, detail page). */
+export const HERO_CARD_ID = 10;
+
+// Constants: the 18 cards of the Terrcatt game (order follows the design folder)
 export const CARDS: CardData[] = [
-  { id: 1, name: 'Olivier Murette', image: cardImages['olivier-murette'] },
-  { id: 2, name: 'Pente', image: cardImages['pente'] },
-  { id: 3, name: 'Route', image: cardImages['route'] },
-  { id: 4, name: 'TWI', image: cardImages['twi'] },
-  { id: 5, name: 'Abandon', image: cardImages['abandon'] },
-  { id: 6, name: 'Apiculture', image: cardImages['apiculture'] },
-  { id: 7, name: 'Drainage', image: cardImages['drainage'] },
-  { id: 8, name: 'Faune Sauvage', image: cardImages['faune-sauvage'] },
-  { id: 9, name: 'Hyper-pluviosité', image: cardImages['hyper-pluviosite'] },
-  { id: 10, name: 'Irrégularité Topographique', image: cardImages['irregularite-topographique'] },
-  { id: 11, name: 'Pâture', image: cardImages['pature'] },
-  { id: 12, name: 'Stockage Eau', image: cardImages['stockage-eau'] },
-  { id: 13, name: 'Substrat Géologique', image: cardImages['substrat-geologique'] },
-  { id: 14, name: 'Terrasses', image: cardImages['terrasses'] },
-  { id: 15, name: 'Utilisation Agricole', image: cardImages['utilagric'] },
+  { id: 1, name: 'Abandon agricole', image: cardImages['abandon-agricole'] },
+  { id: 2, name: "Accumulation d'eau au-dessus de la murette", image: cardImages['accumulation-eau'] },
+  { id: 3, name: 'Apiculture', image: cardImages['apiculture'] },
+  { id: 4, name: "Drainage de l'eau", image: cardImages['drainage-eau'] },
+  { id: 5, name: 'Moyenne montagne', image: cardImages['moyenne-montagne'] },
+  { id: 6, name: 'Murs non entretenus', image: cardImages['murs-non-entretenus'] },
+  { id: 7, name: 'Oliveraie fleurie', image: cardImages['oliveraie-fleurie'] },
+  { id: 8, name: "Olivier planté au bord d'une murette", image: cardImages['olivier-murette'] },
+  { id: 9, name: 'Passé agricole', image: cardImages['passe-agricole'] },
+  { id: 10, name: 'Patrimoine paysager', image: cardImages['patrimoine-paysager'] },
+  { id: 11, name: 'Pente très forte', image: cardImages['pente-tres-forte'] },
+  { id: 12, name: 'Pluies très abondantes', image: cardImages['pluies-abondantes'] },
+  { id: 13, name: "Proximité d'une route", image: cardImages['proximite-route'] },
+  { id: 14, name: "Rôle de la faune sauvage et de l'abandon agricole", image: cardImages['faune-sauvage-abandon'] },
+  { id: 15, name: 'Rôle de la faune sauvage', image: cardImages['faune-sauvage'] },
+  { id: 16, name: "Stockage de l'eau", image: cardImages['stockage-eau'] },
+  { id: 17, name: 'Substrat géologique fragile (éboulis)', image: cardImages['substrat-geologique'] },
+  { id: 18, name: 'Terrasse fleurie', image: cardImages['terrasse-fleurie'] },
 ];

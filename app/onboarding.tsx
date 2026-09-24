@@ -17,7 +17,7 @@ import Animated, {
   withDelay,
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { CARDS, useCards, UserProfile, ProfileRole } from '@/context/CardContext';
+import { CARDS, HERO_CARD_ID, useCards, UserProfile, ProfileRole } from '@/context/CardContext';
 import { MAX_LAYOUT_WIDTH } from '@/components/Card';
 
 const RATING_DOTS = [
@@ -124,7 +124,7 @@ export default function OnboardingScreen() {
   const { width } = useWindowDimensions();
   const { state, setProfile, completeOnboarding } = useCards();
   const [stepIndex, setStepIndex] = useState(0);
-  // Revisit from Paramètres (already qualified) vs first arrival (gated).
+  // Revisit from « En savoir plus » (already qualified) vs first arrival (gated).
   const isRevisit = state.onboardingCompletedAt !== null;
 
   const contentWidth = Math.min(width, MAX_LAYOUT_WIDTH);
@@ -198,7 +198,7 @@ export default function OnboardingScreen() {
   const renderStep = () => {
     switch (step) {
       case 'hook': {
-        const image = CARDS.find((c) => c.id === 14)?.image;
+        const image = CARDS.find((c) => c.id === HERO_CARD_ID)?.image;
         return (
           <View style={styles.narrativePage}>
             {image && (
@@ -259,7 +259,7 @@ export default function OnboardingScreen() {
               <View style={styles.bulletRow}>
                 <Text style={styles.bulletEmoji}>🃏</Text>
                 <Text style={styles.bulletText}>
-                  15 cartes, chacune une caractéristique du paysage de la Roya.
+                  18 cartes, chacune une caractéristique du paysage de la Roya.
                 </Text>
               </View>
 
@@ -387,7 +387,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     borderWidth: 1.5,
     borderColor: '#DEDDDA',
-    backgroundColor: '#000',
+    backgroundColor: '#E3ECFF',
     marginBottom: 28,
   },
   image: {

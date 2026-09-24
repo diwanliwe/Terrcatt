@@ -2,7 +2,7 @@ import React, { useCallback, useMemo } from 'react';
 import { StyleSheet, View, Text, Pressable, Image } from 'react-native';
 import { useCards, CARDS, CardData } from '@/context/CardContext';
 import { SwipeableCard } from '@/components/SwipeableCard';
-import { useCardSize } from '@/components/Card';
+import { useCardSize, CARD_BG } from '@/components/Card';
 
 export function SwipeMode() {
   const { cardWidth, cardHeight } = useCardSize();
@@ -186,7 +186,7 @@ export function SwipeMode() {
   return (
     <View style={styles.container}>
       <View style={styles.headerContainer}>
-        <Text style={styles.stepText}>Étape 2 sur 2 — Affiner</Text>
+        <Text style={styles.stepText}>Étape 2 sur 2 : Affiner</Text>
         <Text style={styles.progressText}>
           {isStep2Complete ? 'Terminé !' : `${step2Index + 1}/${step2Cards.length}`}
         </Text>
@@ -272,17 +272,17 @@ const styles = StyleSheet.create({
     opacity: 0.7,
   },
   cardPreview: {
-    backgroundColor: '#000',
+    backgroundColor: CARD_BG,
     borderRadius: 20,
     overflow: 'hidden',
     borderWidth: 1.5,
     borderColor: '#DEDDDA',
   },
   previewImage: {
-    ...StyleSheet.absoluteFillObject,
-    width: undefined,
-    height: undefined,
-    transform: [{ scale: 1.05 }],
+    // Explicit size: RN-web renders the asset at its natural size when the
+    // style has no width/height, which crops the square artwork.
+    width: '100%',
+    height: '100%',
   },
   completeContainer: {
     alignItems: 'center',

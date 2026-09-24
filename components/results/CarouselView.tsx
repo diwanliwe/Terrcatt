@@ -23,7 +23,7 @@ interface CarouselViewProps {
 
 const GAP = 14;
 const MAX_CARD = 380;
-const IMAGE_RATIO = 1.05; // image height / card width
+const IMAGE_RATIO = 1; // image height / card width (artwork is square)
 const CARD_FOOTER_RATIO = 0.55; // score strip under the image, as a fraction of card width
 // Vertical room the chrome around the card takes (measured, not tuned):
 // top block = 2-line title (64) + hint (22) + gap (8)  ≈ 94
@@ -80,7 +80,7 @@ export function CarouselView({ entries, onSelect }: CarouselViewProps) {
         <Reveal kind="down" delay={TIMING.hint}><TapHint /></Reveal>
       </View>
 
-      {/* ScrollView, not FlatList: with 15 cards virtualisation only causes
+      {/* ScrollView, not FlatList: with 18 cards virtualisation only causes
           remounts, and a remount replays the entrance mid-scroll (web breaks). */}
       <View style={styles.middle}>
       <Animated.ScrollView

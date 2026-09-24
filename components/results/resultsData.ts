@@ -1,27 +1,30 @@
 import { CARDS, CardData, CardComment } from '@/context/CardContext';
 
-// --- PLACEHOLDER: Replace with real terrain truth data ---
+// Terrain truth: "Ranking des 18 cartes du jeu Terrcatt" (M. Cohen, 15 Sept 2026)
 export const GROUND_TRUTH_SCORES: Record<number, number> = {
-  1: 2, 2: -1, 3: -2, 4: 1, 5: -2, 6: 1, 7: 2, 8: 0,
-  9: -1, 10: -1, 11: 0, 12: 2, 13: 0, 14: 2, 15: 1,
+  1: -1, 2: -1, 3: 2, 4: 1, 5: 1, 6: -1, 7: 2, 8: 0, 9: 1,
+  10: 2, 11: 0, 12: -2, 13: -1, 14: -1, 15: 0, 16: 1, 17: -2, 18: 2,
 };
 
 export const GROUND_TRUTH_EXPLANATIONS: Record<number, string> = {
-  1: "Les oliviers en murette sont un indicateur fort de terrasses bien entretenues. Leur présence signale un système agricole traditionnel résilient et productif.",
-  2: "Une pente forte augmente le risque d'érosion et rend la réhabilitation des terrasses plus difficile et coûteuse.",
-  3: "La proximité d'une route facilite l'accès mais peut aussi fragmenter le paysage et augmenter les risques de ruissellement concentré.",
-  4: "Un indice topographique d'humidité élevé indique une bonne rétention d'eau, favorable à la végétation et à la stabilité des terrasses.",
-  5: "L'abandon prolongé des terrasses entraîne une dégradation rapide des murs de soutènement et une perte de la capacité de rétention d'eau.",
-  6: "L'apiculture bénéficie de la biodiversité des terrasses fleuries et contribue à la pollinisation des cultures en terrasses.",
-  7: "Un bon drainage est essentiel pour la stabilité des murs de terrasses et prévient les glissements de terrain lors de fortes pluies.",
-  8: "La faune sauvage a un impact ambivalent : elle peut endommager les murs mais aussi contribuer à la dispersion des graines et à la biodiversité.",
-  9: "L'hyper-pluviosité met à rude épreuve les terrasses, augmentant le risque d'effondrement des murs et de saturation des sols.",
-  10: "L'irrégularité topographique complique la mécanisation et l'entretien régulier des terrasses.",
-  11: "La pâture modérée peut aider à entretenir la végétation des terrasses, mais un surpâturage dégrade les sols et les murs.",
-  12: "Le stockage d'eau est une fonction clé des terrasses, réduisant le ruissellement et augmentant la résilience face aux sécheresses.",
-  13: "Le substrat géologique influence directement la stabilité des murs et la capacité de drainage naturel des terrasses.",
-  14: "Les terrasses elles-mêmes sont le cœur du système : elles retiennent les sols, stockent l'eau et créent des microclimats favorables.",
-  15: "L'utilisation agricole active des terrasses est le meilleur garant de leur entretien et de leur pérennité.",
+  1: "L'abandon agricole favorise la dégradation des terrasses et la perte de biodiversité.",
+  2: "L'accumulation d'eau en amont de la murette est observée dans certaines terrasses ayant connu des glissements de terrain.",
+  3: "L'apiculture est favorable dans les terrasses où les plantes sont pollinisées par les insectes.",
+  4: "Le drainage des sols, avec la présence d'une sous-couche drainante en arrière de la couche de grosses pierres, est favorable à la stabilité des terrasses.",
+  5: "La moyenne montagne connaît une pluviosité modérée, mais une tendance à l'assèchement des sols.",
+  6: "Des murs mal entretenus jouent un rôle probable dans la fragilisation des terrasses.",
+  7: "L'oliveraie fleurie abrite une biodiversité et des interactions avec les pollinisateurs observées dans les oliveraies entretenues avec des pratiques peu intensives.",
+  8: "Un olivier planté au bord des murettes peut contribuer à dégrader les murs, mais il est favorable aux cultures associées.",
+  9: "Le passé agricole est favorable à la conservation des sols, et donc à une moindre vulnérabilité aux glissements.",
+  10: "Le patrimoine paysager est reconnu par l'Unesco, avec une dimension esthétique.",
+  11: "Une pente très forte peut favoriser la survenue de glissements sur les terrasses.",
+  12: "Une pluie très forte favorise les glissements de terrain sur les terrasses.",
+  13: "La proximité de la route modifie l'écoulement de l'eau.",
+  14: "La faune sauvage combinée à l'abandon agricole joue un rôle probable dans la dégradation des terrasses.",
+  15: "Le rôle de la faune sauvage est ambigu.",
+  16: "Les terrasses contiennent un peu plus d'eau que les versants non aménagés pendant les évènements extrêmes (crue, sécheresse).",
+  17: "Une roche peu cohésive (éboulis) est un facteur de fragilité aux glissements.",
+  18: "Une terrasse fleurie apporte un agrément esthétique et de la biodiversité.",
 };
 
 // --- Score colors / labels ---
