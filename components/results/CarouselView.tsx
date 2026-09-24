@@ -1,6 +1,5 @@
 import React, { useRef, useState, useCallback } from 'react';
-import { StyleSheet, View, useWindowDimensions } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { StyleSheet, View, useWindowDimensions, LayoutChangeEvent } from 'react-native';
 import Animated, {
   useSharedValue,
   useAnimatedScrollHandler,
@@ -23,35 +22,36 @@ interface CarouselViewProps {
 
 const GAP = 14;
 const MAX_CARD = 380;
+const MIN_CARD = 200;
 const IMAGE_RATIO = 1; // image height / card width (artwork is square)
-const CARD_FOOTER_RATIO = 0.55; // score strip under the image, as a fraction of card width
-// Vertical room the chrome around the card takes (measured, not tuned):
-// top block = 2-line title (64) + hint (22) + gap (8)  ≈ 94
-// bottom block = dots (15, scaled) + legend (18) + gap (8) ≈ 41
-// + the gaps above/below the card and the container padding.
-const TOP_BLOCK = 94;
-const BOTTOM_BLOCK = 41;
-const SCREEN_TOP = 10; // must match the paddingTop in results.tsx
-const TAB_BAR = 50;    // default bottom tab bar height (safe-area inset added separately)
+// Footer of a ResultCard (name + score chips + agreement label, with padding
+// and border) before it is measured: 2*16 + 22 + 8 + (18 + 4 + 30) + 8 + 22 + 8.
+const FOOTER_FALLBACK = 152;
 
 /**
  * Snap carousel: the focused card is centred and full size, its neighbours
  * peek in from both sides, slightly smaller and faded — cards laid on a table.
  */
 export function CarouselView({ entries, onSelect }: CarouselViewProps) {
-  const { width, height } = useWindowDimensions();
-  const insets = useSafeAreaInsets();
-  // The page has no header: the headline is pinned to the top and the dots to
-  // the bottom, and the card fills whatever is left in between. As wide as the
-  // viewport allows (keeping a peek on each side), but never so tall that it
-  // pushes the dots onto the tab bar.
-  const usableHeight =
-    height - insets.top - SCREEN_TOP - insets.bottom - TAB_BAR
-    - space.xs - space.sm            // container padding
-    - TOP_BLOCK - BOTTOM_BLOCK
-    - 2 * space.md;                  // breathing room above and below the card
-  const maxByHeight = usableHeight / (IMAGE_RATIO + CARD_FOOTER_RATIO);
-  const cardWidth = Math.max(220, Math.min(width * 0.76, MAX_CARD, maxByHeight));
+  const { width } = useWindowDimensions();
+  // The card fills whatever is left between the headline and the dots. That
+  // space is measured (onLayout), not estimated: the headline wraps to two or
+  // three lines and the legend to one or two depending on the phone, and a
+  // wrong estimate clipped the card top and bottom on small screens.
+  const [middleHeight, setMiddleHeight] = useState<number | null>(null);
+  const [footerHeight, setFooterHeight] = useState(FOOTER_FALLBACK);
+  const onMiddleLayout = useCallback((e: LayoutChangeEvent) => {
+    const h = Math.round(e.nativeEvent.layout.height);
+    setMiddleHeight((prev) => (prev === h ? prev : h));
+  }, []);
+  const onFooterHeight = useCallback((h: number) => {
+    const r = Math.round(h);
+    setFooterHeight((prev) => (prev === r ? prev : r));
+  }, []);
+  const maxByHeight = middleHeight === null
+    ? Infinity
+    : (middleHeight - 2 * space.md - footerHeight) / IMAGE_RATIO;
+  const cardWidth = Math.max(MIN_CARD, Math.min(width * 0.76, MAX_CARD, maxByHeight));
   const interval = cardWidth + GAP;
   const sidePadding = (width - cardWidth) / 2;
 
@@ -82,7 +82,7 @@ export function CarouselView({ entries, onSelect }: CarouselViewProps) {
 
       {/* ScrollView, not FlatList: with 18 cards virtualisation only causes
           remounts, and a remount replays the entrance mid-scroll (web breaks). */}
-      <View style={styles.middle}>
+      <View style={styles.middle} onLayout={onMiddleLayout}>
       <Animated.ScrollView
         ref={listRef}
         horizontal
@@ -102,6 +102,7 @@ export function CarouselView({ entries, onSelect }: CarouselViewProps) {
                 entry={item}
                 width={cardWidth}
                 imageRatio={IMAGE_RATIO}
+                onFooterHeight={index === 0 ? onFooterHeight : undefined}
                 onPress={() => onSelect(item)}
               />
             </CarouselItem>
@@ -154,5 +155,7 @@ const styles = StyleSheet.create({
   container: { flex: 1, paddingTop: space.xs, paddingBottom: space.sm },
   top: { gap: space.xs },
   middle: { flex: 1, justifyContent: 'center', paddingVertical: space.md },
-  list: { flexGrow: 0 },
+  // Never let the list shrink to the middle box: a mismatch of a few px must
+  // overflow, not clip the card.
+  list: { flexGrow: 0, flexShrink: 0 },
 });

@@ -52,13 +52,17 @@ interface ResultCardProps {
   detailed?: boolean;
   /** Image height as a fraction of the card width. */
   imageRatio?: number;
+  /** Reports the footer height (text block + border) so a parent can size the image to the space left. */
+  onFooterHeight?: (height: number) => void;
 }
 
 /**
  * Image-first card with the user's vote and terrain truth underneath.
  * Used by the Groupes grid and the Carrousel; width drives everything.
  */
-export function ResultCard({ entry, width, onPress, detailed = true, imageRatio = 1 }: ResultCardProps) {
+const CARD_BORDER = 4;
+
+export function ResultCard({ entry, width, onPress, detailed = true, imageRatio = 1, onFooterHeight }: ResultCardProps) {
   const meta = AGREEMENT_META[entry.agreement];
   const imageHeight = width * imageRatio;
 
@@ -75,7 +79,10 @@ export function ResultCard({ entry, width, onPress, detailed = true, imageRatio 
         <Image source={entry.card.image} style={styles.image} resizeMode="cover" />
       </View>
 
-      <View style={styles.body}>
+      <View
+        style={styles.body}
+        onLayout={onFooterHeight ? (e) => onFooterHeight(e.nativeEvent.layout.height + CARD_BORDER * 2) : undefined}
+      >
         <Text style={styles.name} numberOfLines={1}>{entry.card.name}</Text>
         {detailed ? (
           <>
@@ -96,7 +103,7 @@ const styles = StyleSheet.create({
     backgroundColor: surface,
     borderRadius: 16,
     overflow: 'hidden',
-    borderWidth: 4,
+    borderWidth: CARD_BORDER,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.08,

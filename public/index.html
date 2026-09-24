@@ -24,6 +24,14 @@
       body {
         height: 100%;
       }
+      /* iOS Safari: 100% is the large viewport, which runs behind the bottom
+         toolbar and hides the tab bar. dvh follows the visible area instead. */
+      @supports (height: 100dvh) {
+        html,
+        body {
+          height: 100dvh;
+        }
+      }
       body {
         overflow: hidden;
         /* The app has no dark theme: keep the page on its paper colour so nothing flashes black. */
