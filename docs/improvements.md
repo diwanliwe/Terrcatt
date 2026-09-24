@@ -197,3 +197,18 @@ if voice notes don't come back.
   pass (results page, onboarding).
 - Open question: do we gate the preview (simple password / unlisted URL)? Decide
   with the client.
+
+## Daily stats + keep-alive (2026-09-25)
+
+Migration `0004_daily_stats.sql`: `daily_stats` table (one row per day:
+participants total/new/onboarded/active, events, ratings, runs started, new
+participants by role and by source), `record_daily_stats(day)` and
+`keep_alive()`, scheduled by pg_cron every day at 00:15 UTC as
+`terrcatt-daily`. The keep-alive is one pg_net GET to the project's own REST
+root (Free plan pauses after ~7 days without *API* requests; DB-only activity
+and pg_cron do not count, and a paused project stops pg_cron). Vault secrets
+`project_url` and `anon_key` must be created once in the SQL editor; without
+them the stats still run and the keep-alive logs a notice. Read the summary
+with `select * from daily_stats order by day desc;`, force a recompute with
+`select record_daily_stats('2026-09-24');`, check the job with
+`select * from cron.job_run_details order by start_time desc limit 10;`.
