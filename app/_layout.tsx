@@ -8,6 +8,7 @@ import 'react-native-reanimated';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import { useColorScheme } from '@/components/useColorScheme';
+import '@/lib/installPrompt';
 import { CardProvider } from '@/context/CardContext';
 
 export {
@@ -55,6 +56,7 @@ function RootLayoutNav() {
             <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
             <Stack.Screen name="modal" options={{ presentation: 'modal' }} />
             <Stack.Screen name="card/[id]" options={{ headerShown: false }} />
+            <Stack.Screen name="install" options={{ headerShown: false }} />
             <Stack.Screen
               name="onboarding"
               options={{ headerShown: false, presentation: 'fullScreenModal' }}

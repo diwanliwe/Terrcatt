@@ -1,0 +1,17 @@
+{
+  "name": "Terrcatt : le jeu des terrasses",
+  "short_name": "Terrcatt",
+  "description": "Jeu de partage des connaissances sur les terrasses de culture de la vallée de la Roya. Projet Terrcatt, Sorbonne Université.",
+  "lang": "fr",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#FDFCFA",
+  "theme_color": "#FDFCFA",
+  "icons": [
+    { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
