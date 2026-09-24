@@ -42,3 +42,5 @@ yarn-error.*
 
 # Supabase keys (EXPO_PUBLIC_* are bundled into the app; only the anon key belongs here)
 .env
+.vercel
+.env*
