@@ -3,7 +3,8 @@ import { AppState } from 'react-native';
 import * as SplashScreen from 'expo-splash-screen';
 import { load, save, clear, createUserId, createDeviceSecret } from './persistence';
 import { pushSnapshot, pushEvents, deleteSnapshot } from './sync';
-import { ImageSourcePropType } from 'react-native';
+import { ImageSourcePropType, Platform } from 'react-native';
+import { Language, LANGUAGE_CODES, detectLanguage, isLanguage } from '@/i18n/language';
 
 // Types
 export type GameMode = 'swipe' | 'compare' | 'rate';
@@ -56,7 +57,9 @@ export interface InteractionEvent {
     /** Expert mode toggled (value 1 = on, 0 = off). */
     | 'expert'
     /** The player proposed a title for a card in expert mode (text lives in the snapshot's cardTitles). */
-    | 'title';
+    | 'title'
+    /** Language changed (value = LANGUAGE_CODES: 0 fr, 1 en, 2 it). */
+    | 'language';
   at: number; // epoch ms
   /** Which playthrough this event belongs to (1-based) — runs must never be mixed in analysis. */
   run: number;
@@ -90,6 +93,9 @@ interface CardState {
   comments: Record<number, CardComment>;
   profile: UserProfile;
   animationsEnabled: boolean;
+  /** Language of the game (texts and card titles). Detected for a new participant,
+   *  then the player's choice. Part of the snapshot so answers can be split by language. */
+  language: Language;
   /** Expert mode (test option): cards are shown without their title and the
    *  player may propose one. Logged as an `expert` event so runs can be told apart. */
   expertMode: boolean;
@@ -114,6 +120,7 @@ type CardAction =
   | { type: 'SET_COMMENT'; cardId: number; comment: CardComment }
   | { type: 'SET_PROFILE'; profile: Partial<UserProfile> }
   | { type: 'SET_ANIMATIONS_ENABLED'; enabled: boolean }
+  | { type: 'SET_LANGUAGE'; language: Language }
   | { type: 'SET_EXPERT_MODE'; enabled: boolean }
   | { type: 'SET_CARD_TITLE'; cardId: number; title: string }
   | { type: 'HYDRATE'; state: CardState }
@@ -139,6 +146,7 @@ interface CardContextType {
   setComment: (cardId: number, comment: CardComment) => void;
   setProfile: (profile: Partial<UserProfile>) => void;
   setAnimationsEnabled: (enabled: boolean) => void;
+  setLanguage: (language: Language) => void;
   setExpertMode: (enabled: boolean) => void;
   /** Expert mode: the player's own title for a card (empty string clears it). */
   setCardTitle: (cardId: number, title: string) => void;
@@ -175,12 +183,19 @@ const initialState: CardState = {
     source: null,
   },
   animationsEnabled: true,
+  language: 'fr',
   expertMode: false,
   cardTitles: {},
 };
 
 function freshState(): CardState {
-  return { ...initialState, userId: createUserId(), deviceSecret: createDeviceSecret(), createdAt: Date.now() };
+  return {
+    ...initialState,
+    userId: createUserId(),
+    deviceSecret: createDeviceSecret(),
+    createdAt: Date.now(),
+    language: detectLanguage(),
+  };
 }
 
 function logged(state: CardState, event: Omit<InteractionEvent, 'at' | 'run'>): CardState {
@@ -193,7 +208,8 @@ function cardReducer(state: CardState, action: CardAction): CardState {
     case 'HYDRATE':
       return action.state;
     case 'RESET_ALL':
-      return freshState();
+      // New anonymous participant, but the player keeps the language they chose.
+      return { ...freshState(), language: state.language };
     case 'COMPLETE_ONBOARDING':
       if (state.onboardingCompletedAt) return state; // revisits from Paramètres don't re-log
       return { ...logged(state, { type: 'onboarding' }), onboardingCompletedAt: Date.now() };
@@ -318,6 +334,9 @@ function cardReducer(state: CardState, action: CardAction): CardState {
       };
     case 'SET_ANIMATIONS_ENABLED':
       return { ...state, animationsEnabled: action.enabled };
+    case 'SET_LANGUAGE':
+      if (state.language === action.language) return state;
+      return { ...logged(state, { type: 'language', value: LANGUAGE_CODES[action.language] }), language: action.language };
     case 'SET_EXPERT_MODE':
       if (state.expertMode === action.enabled) return state;
       return { ...logged(state, { type: 'expert', value: action.enabled ? 1 : 0 }), expertMode: action.enabled };
@@ -364,6 +383,7 @@ export function CardProvider({ children }: { children: ReactNode }) {
               onboardingCompletedAt: stored.onboardingCompletedAt ?? null,
               expertMode: stored.expertMode ?? false,
               cardTitles: stored.cardTitles ?? {},
+              language: isLanguage(stored.language) ? stored.language : detectLanguage(),
             }
           : freshState(),
       });
@@ -427,6 +447,13 @@ export function CardProvider({ children }: { children: ReactNode }) {
     await clear();
     dispatch({ type: 'RESET_ALL' });
   };
+
+  // Web: keep <html lang> in line with the game language (screen readers, translation prompts).
+  useEffect(() => {
+    if (Platform.OS === 'web' && typeof document !== 'undefined') {
+      document.documentElement.lang = state.language;
+    }
+  }, [state.language]);
 
   if (!hydrated) return null;
 
@@ -494,6 +521,10 @@ export function CardProvider({ children }: { children: ReactNode }) {
     dispatch({ type: 'SET_ANIMATIONS_ENABLED', enabled });
   };
 
+  const setLanguage = (language: Language) => {
+    dispatch({ type: 'SET_LANGUAGE', language });
+  };
+
   const setExpertMode = (enabled: boolean) => {
     dispatch({ type: 'SET_EXPERT_MODE', enabled });
   };
@@ -522,6 +553,7 @@ export function CardProvider({ children }: { children: ReactNode }) {
         setComment,
         setProfile,
         setAnimationsEnabled,
+        setLanguage,
         setExpertMode,
         setCardTitle,
         resetAll,

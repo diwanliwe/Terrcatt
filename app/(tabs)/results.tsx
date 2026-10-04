@@ -6,6 +6,7 @@ import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { useResultEntries } from '@/components/results/useResultEntries';
 import { CarouselView } from '@/components/results/CarouselView';
 import { type, space } from '@/components/results/theme';
+import { useT } from '@/i18n';
 
 export default function ResultsScreen() {
   const router = useRouter();
@@ -55,21 +56,22 @@ export default function ResultsScreen() {
 // --- Pre-completion state ---
 
 function LockedState({ rated, total, onContinue }: { rated: number; total: number; onContinue: () => void }) {
+  const t = useT();
   const progress = total === 0 ? 0 : rated / total;
   return (
     <View style={styles.locked}>
       <FontAwesome name="lock" size={36} color="#D8C4B0" />
       <Text style={styles.lockedTitle}>
-        {rated === 0 ? 'Aucune carte notée' : `${rated} carte${rated > 1 ? 's' : ''} sur ${total} notée${rated > 1 ? 's' : ''}`}
+        {rated === 0 ? t.results.noneRated : t.results.ratedCount(rated, total)}
       </Text>
       <View style={styles.progressTrack}>
         <View style={[styles.progressFill, { width: `${Math.round(progress * 100)}%` }]} />
       </View>
       <Text style={styles.lockedText}>
-        Terminez de noter les {total} cartes pour comparer votre regard avec celui de l'étude.
+        {t.results.lockedText(total)}
       </Text>
       <Pressable style={({ pressed }) => [styles.cta, pressed && styles.ctaPressed]} onPress={onContinue}>
-        <Text style={styles.ctaText}>{rated === 0 ? 'Commencer' : 'Continuer à noter'}</Text>
+        <Text style={styles.ctaText}>{rated === 0 ? t.common.start : t.results.continue}</Text>
         <FontAwesome name="arrow-right" size={14} color="#fff" />
       </Pressable>
     </View>

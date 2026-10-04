@@ -10,6 +10,7 @@ import {
   useWindowDimensions,
 } from 'react-native';
 import { useRouter } from 'expo-router';
+import { useT } from '@/i18n';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -21,12 +22,13 @@ import Animated, {
 import { useCards, CARDS } from '@/context/CardContext';
 import { Card } from '@/components/Card';
 
+// Score names are translated (t.scale); only the ends of the scale are labelled on screen.
 const RATING_OPTIONS = [
-  { label: 'Très défavorable', score: -2, color: '#F44336' },
-  { label: 'Défavorable', score: -1, color: '#FF9800' },
-  { label: 'Neutre', score: 0, color: '#9E9E9E' },
-  { label: 'Favorable', score: 1, color: '#8BC34A' },
-  { label: 'Très favorable', score: 2, color: '#4CAF50' },
+  { score: -2, color: '#F44336' },
+  { score: -1, color: '#FF9800' },
+  { score: 0, color: '#9E9E9E' },
+  { score: 1, color: '#8BC34A' },
+  { score: 2, color: '#4CAF50' },
 ];
 
 const EXIT_MS = 260;
@@ -34,6 +36,7 @@ const ENTER_MS = 200;
 
 export function RateMode() {
   const { state, rateCard, nextRatingCard, startNewRun, setCardTitle } = useCards();
+  const t = useT();
   // Expert mode (test option, « En savoir plus »): the card has no title and the
   // player may write what they think it illustrates before voting.
   const expert = state.expertMode;
@@ -116,11 +119,11 @@ export function RateMode() {
     >
       <View style={styles.progressContainer}>
         <Text style={styles.progressText}>
-          {isComplete ? 'Terminé !' : `${currentIndex + 1}/${CARDS.length}`}
+          {isComplete ? t.rate.done : `${currentIndex + 1}/${CARDS.length}`}
         </Text>
         {expert && !isComplete && (
           <View style={styles.expertBadge}>
-            <Text style={styles.expertBadgeText}>Mode expert</Text>
+            <Text style={styles.expertBadgeText}>{t.rate.expertBadge}</Text>
           </View>
         )}
       </View>
@@ -129,21 +132,21 @@ export function RateMode() {
         {isComplete ? (
           <Animated.View entering={FadeInDown.duration(400)} style={styles.completeContainer}>
             <Text style={styles.completeEmoji}>🎉</Text>
-            <Text style={styles.completeText}>Toutes les cartes sont notées !</Text>
+            <Text style={styles.completeText}>{t.rate.allRated}</Text>
             <Text style={styles.completeSubtext}>
-              Découvrez votre classement et comparez votre regard à celui des scientifiques.
+              {t.rate.allRatedSub}
             </Text>
             <Pressable
               style={({ pressed }) => [styles.resultsButton, pressed && styles.resultsButtonPressed]}
               onPress={() => router.push('/results')}
             >
-              <Text style={styles.resultsButtonText}>Voir mes résultats</Text>
+              <Text style={styles.resultsButtonText}>{t.rate.seeResults}</Text>
             </Pressable>
             <Pressable
               style={({ pressed }) => [styles.replayButton, pressed && { opacity: 0.6 }]}
               onPress={startNewRun}
             >
-              <Text style={styles.replayButtonText}>Recommencer une partie</Text>
+              <Text style={styles.replayButtonText}>{t.rate.replay}</Text>
             </Pressable>
           </Animated.View>
         ) : (
@@ -160,7 +163,7 @@ export function RateMode() {
               style={styles.titleInput}
               value={proposedTitle}
               onChangeText={setProposedTitle}
-              placeholder="Quel titre donneriez-vous à cette carte ?"
+              placeholder={t.rate.titlePlaceholder}
               placeholderTextColor="#A39E98"
               maxLength={80}
               returnKeyType="done"
@@ -186,8 +189,8 @@ export function RateMode() {
               ))}
             </View>
             <View style={styles.labelsRow}>
-              <Text style={styles.labelLeft}>Très défavorable</Text>
-              <Text style={styles.labelRight}>Très favorable</Text>
+              <Text style={styles.labelLeft}>{t.scale['-2']}</Text>
+              <Text style={styles.labelRight}>{t.scale['2']}</Text>
             </View>
           </View>
         </View>

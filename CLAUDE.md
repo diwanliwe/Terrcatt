@@ -101,11 +101,18 @@ Key reducer actions: `SWIPE_FIRST_PASS`, `SWIPE_SECOND_PASS`, `COMPARE_WIN`, `CO
 
 ## Card Data
 
-18 cards defined in `context/CardContext.tsx` with square 1024px JPG images in `/assets/cards/` (final designs, Sept 2026; terrain-truth scores in `components/results/resultsData.ts`). The same artwork without titles lives in `/assets/cards/untitled/` (`imageUntitled`): used by the expert mode (`state.expertMode`, toggle in « En savoir plus ») and reserved for future translated versions. Landscape photographs are in `/assets/images/roya-*.jpg`. Card images use `require()` for static Expo imports.
+18 cards defined in `context/CardContext.tsx` with square 1024px JPG images in `/assets/cards/` (final designs, Sept 2026; terrain-truth scores in `components/results/resultsData.ts`). The same artwork without titles lives in `/assets/cards/untitled/` (`imageUntitled`): used by the expert mode (`state.expertMode`, toggle in « En savoir plus ») and by the English and Italian versions, where the app draws the translated title (see Language). Landscape photographs are in `/assets/images/roya-*.jpg`. Card images use `require()` for static Expo imports.
 
 ## Language
 
-All user-facing text in the app **must be in French**. This includes tab labels, buttons, instructions, status messages, and any new UI text. Code comments and variable names remain in English.
+The app is in **French, English and Italian**. French is the reference language. Code comments and variable names remain in English.
+
+- **Never hard-code user-facing text in a component.** Every string lives in `i18n/fr.ts` (the reference) and is translated in `i18n/en.ts` and `i18n/it.ts` (same shape, enforced by the `Strings` type). Components read it with `const t = useT()`.
+- `**…**` in a string marks key words rendered in bold by `<Rich text={…} />`.
+- Language: detected from the browser/device for a new participant (fr/en/it, else French), then the player's choice via `LanguageSwitcher` (welcome screens and « En savoir plus »). Stored as `state.language` in the snapshot and logged as a `language` event (value 0 fr, 1 en, 2 it) so answers can be split by language.
+- Cards: French uses the artwork with the title baked in; English and Italian use `imageUntitled` and `Card` draws the translated title in the top band (`cardArtwork`, `cardName` in `i18n/index.tsx`).
+- French typography: non-breaking space (`\u00a0`) before `: ! ?` and inside « ». No em dashes in any language.
+- The legacy Swipe/Compare modes and `GameModeModal` (not reachable) are not translated.
 
 ## Key Patterns
 

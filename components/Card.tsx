@@ -1,6 +1,7 @@
-import React from 'react';
-import { View, Text, StyleSheet, ViewStyle, Image, useWindowDimensions } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, ViewStyle, Image, useWindowDimensions, Platform } from 'react-native';
 import { CardData } from '@/context/CardContext';
+import { useLanguage, useT, cardName, cardArtwork } from '@/i18n';
 
 // Cap the reference width so cards stay phone-sized on desktop browsers
 export const MAX_LAYOUT_WIDTH = 500;
@@ -30,6 +31,13 @@ interface CardProps {
 
 export function Card({ card, style, size = 'normal', rank, untitled = false }: CardProps) {
   const { cardWidth, cardHeight } = useCardSize();
+  const language = useLanguage();
+  const t = useT();
+  // Measured, because the card's size comes from its props, its size variant or its parent.
+  const [width, setWidth] = useState(0);
+  // French artwork has the title baked in. Other languages draw it on the
+  // title-less artwork; expert mode shows no title at all.
+  const drawTitle = !untitled && language !== 'fr';
   const shadowStyle =
     size === 'small' ? styles.shadowSmall :
     size === 'medium' ? styles.shadowMedium :
@@ -41,12 +49,19 @@ export function Card({ card, style, size = 'normal', rank, untitled = false }: C
 
   return (
     <View style={[styles.shadow, shadowStyle, style]}>
-      <View style={[styles.inner, innerStyle]}>
+      <View style={[styles.inner, innerStyle]} onLayout={(e) => setWidth(e.nativeEvent.layout.width)}>
         <Image
-          source={untitled ? card.imageUntitled : card.image}
+          source={untitled ? card.imageUntitled : cardArtwork(card, language)}
           style={styles.image}
           resizeMode="cover"
         />
+        {drawTitle && width > 0 && (
+          <View style={[styles.titleBox, titleBox(width)]}>
+            <Text style={[styles.title, titleFont(cardName(card, t), width)]} numberOfLines={3}>
+              {cardName(card, t)}
+            </Text>
+          </View>
+        )}
         {rank !== undefined && (
           <View style={styles.rankBadge}>
             <Text style={styles.rankText}>#{rank}</Text>
@@ -55,6 +70,20 @@ export function Card({ card, style, size = 'normal', rank, untitled = false }: C
       </View>
     </View>
   );
+}
+
+/**
+ * Anchored to the top like the designer's titles: some artwork (steep slope,
+ * olive tree) reaches high up the card, so the title must stay in the top band.
+ */
+function titleBox(width: number) {
+  return { top: width * 0.055, paddingHorizontal: width * 0.05 };
+}
+
+/** Same size as the designer's titles; long translated titles get smaller so they never get cut off. */
+function titleFont(title: string, width: number) {
+  const ratio = title.length <= 30 ? 0.068 : title.length <= 45 ? 0.058 : 0.052;
+  return { fontSize: width * ratio, lineHeight: width * ratio * 1.18 };
 }
 
 const styles = StyleSheet.create({
@@ -104,6 +133,20 @@ const styles = StyleSheet.create({
     // style has no width/height, which crops the square artwork.
     width: '100%',
     height: '100%',
+  },
+  // Drawn title (non-French cards): placed where the designer's title sits on the
+  // French artwork, one or two centred lines in a bold sans-serif.
+  titleBox: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    alignItems: 'center',
+  },
+  title: {
+    color: '#111',
+    fontWeight: '700',
+    textAlign: 'center',
+    fontFamily: Platform.OS === 'web' ? 'Arial, Helvetica, sans-serif' : undefined,
   },
   rankBadge: {
     position: 'absolute',

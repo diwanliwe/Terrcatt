@@ -5,18 +5,20 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { InstallGuide } from '@/components/InstallGuide';
 import { MAX_LAYOUT_WIDTH } from '@/components/Card';
+import { useT } from '@/i18n';
 
 /** How to add Terrcatt to the home screen. Reached from « En savoir plus ». */
 export default function InstallScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const t = useT();
 
   return (
     <View style={[styles.page, { paddingTop: insets.top + 10 }]}>
       <View style={styles.backRow}>
         <Pressable onPress={() => router.back()} style={styles.back} hitSlop={8}>
           <FontAwesome name="chevron-left" size={16} color="#2B2B2B" />
-          <Text style={styles.backText}>En savoir plus</Text>
+          <Text style={styles.backText}>{t.install.back}</Text>
         </Pressable>
       </View>
       <ScrollView
@@ -25,7 +27,7 @@ export default function InstallScreen() {
       >
         <View style={styles.column}>
           <Image source={require('@/assets/images/icon.png')} style={styles.appIcon} />
-          <Text style={styles.title}>Installer Terrcatt</Text>
+          <Text style={styles.title}>{t.install.title}</Text>
           <InstallGuide />
         </View>
       </ScrollView>

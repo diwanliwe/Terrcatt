@@ -6,13 +6,8 @@ import { LinearGradient } from 'expo-linear-gradient';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { useResultEntries } from '@/components/results/useResultEntries';
 import { useCards } from '@/context/CardContext';
-import {
-  AGREEMENT_META,
-  GROUND_TRUTH_EXPLANATIONS,
-  scoreToColor,
-  formatScore,
-  scoreLabel,
-} from '@/components/results/resultsData';
+import { AGREEMENT_META, scoreToColor, formatScore } from '@/components/results/resultsData';
+import { useT, useLanguage, cardName, cardArtwork, scoreName } from '@/i18n';
 import { type, space, ink, muted, surface } from '@/components/results/theme';
 
 const MAX_WIDTH = 560;
@@ -30,6 +25,8 @@ export default function CardDetailScreen() {
   const { width, height } = useWindowDimensions();
   const { byInterest, isComplete } = useResultEntries();
   const { state } = useCards();
+  const t = useT();
+  const language = useLanguage();
 
   const index = byInterest.findIndex((e) => e.card.id === Number(id));
   const entry = index >= 0 ? byInterest[index] : null;
@@ -40,11 +37,9 @@ export default function CardDetailScreen() {
   if (!entry || !isComplete) {
     return (
       <View style={[styles.page, { paddingTop: insets.top + 10 }]}>
-        <BackRow onPress={goBack} />
+        <BackRow onPress={goBack} label={t.detail.back} />
         <View style={styles.empty}>
-          <Text style={styles.emptyText}>
-            {entry ? 'Terminez de noter les cartes pour voir le détail.' : 'Carte introuvable.'}
-          </Text>
+          <Text style={styles.emptyText}>{entry ? t.detail.notComplete : t.detail.notFound}</Text>
         </View>
       </View>
     );
@@ -52,7 +47,8 @@ export default function CardDetailScreen() {
 
   const { card, userScore, gtScore, gap, agreement } = entry;
   const meta = AGREEMENT_META[agreement];
-  const explanation = GROUND_TRUTH_EXPLANATIONS[card.id] ?? 'Aucune explication disponible.';
+  const agreementText = t.results.agreement[agreement];
+  const explanation = t.cards[card.id]?.explanation ?? t.detail.noExplanation;
   // Expert mode: the title the player proposed before seeing the real one.
   const ownTitle = state.cardTitles[card.id];
   // Subtract the scroll container's horizontal padding, otherwise the column
@@ -67,7 +63,7 @@ export default function CardDetailScreen() {
 
   return (
     <View style={[styles.page, { paddingTop: insets.top + 10 }]}>
-      <BackRow onPress={goBack} />
+      <BackRow onPress={goBack} label={t.detail.back} />
       <ScrollView
         contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + space.lg }]}
         showsVerticalScrollIndicator={false}
@@ -78,60 +74,53 @@ export default function CardDetailScreen() {
           <View style={[styles.hero, { height: heroHeight }]}>
             {/* Explicit size: RN-web falls back to the image's natural size
                 (left-aligned) when the style has no width/height. */}
-            <Image source={card.image} style={[StyleSheet.absoluteFill, { width: '100%', height: '100%' }]} resizeMode="contain" />
+            <Image source={cardArtwork(card, language)} style={[StyleSheet.absoluteFill, { width: '100%', height: '100%' }]} resizeMode="contain" />
             <LinearGradient
               colors={['rgba(253,252,250,0)', 'rgba(253,252,250,0.85)', BACKGROUND]}
               locations={[0, 0.72, 1]}
               style={styles.heroFade}
             />
             <View style={styles.heroText}>
-              <Text style={styles.title}>{card.name}</Text>
-              {ownTitle ? <Text style={styles.ownTitle}>Votre titre : « {ownTitle} »</Text> : null}
+              <Text style={styles.title}>{cardName(card, t)}</Text>
+              {ownTitle ? <Text style={styles.ownTitle}>{t.detail.yourTitle(ownTitle)}</Text> : null}
             </View>
           </View>
 
           <View style={[styles.compareCard, { borderColor: meta.color }]}>
-            <Text style={styles.verdictLabel}>{meta.description}</Text>
+            <Text style={styles.verdictLabel}>{agreementText.description}</Text>
             <View style={styles.scores}>
-              <ScoreColumn label="Votre regard" score={userScore} />
-              <ScoreColumn label="Regard de l'étude" score={gtScore} />
+              <ScoreColumn label={t.detail.yourView} score={userScore} />
+              <ScoreColumn label={t.detail.studyView} score={gtScore} />
             </View>
           </View>
 
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Ce que l'étude a observé</Text>
+            <Text style={styles.sectionTitle}>{t.detail.observedTitle}</Text>
             <Text style={styles.body}>{explanation}</Text>
           </View>
 
           {/* Placeholder copy and image, styled like final content so the
               client sees what the user will actually get. */}
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Pour aller plus loin</Text>
-            <Text style={styles.body}>
-              Chaque carte s'appuie sur les observations menées dans la vallée de la Roya
-              après la tempête Alex. L'équipe Terrcatt compare le regard des habitants avec
-              les données recueillies sur le terrain pour guider la réhabilitation des
-              terrasses.
-            </Text>
+            <Text style={styles.sectionTitle}>{t.detail.furtherTitle}</Text>
+            <Text style={styles.body}>{t.detail.furtherBody}</Text>
             <Image
               source={require('@/assets/images/roya-terrasses.jpg')}
               style={[styles.slotImage, { height: contentWidth * 0.62 }]}
               resizeMode="cover"
             />
-            <Text style={styles.slotCaption}>
-              Terrasses de culture et murs en pierre sèche, vallée de la Roya (avril 2025).
-            </Text>
+            <Text style={styles.slotCaption}>{t.detail.furtherCaption}</Text>
           </View>
 
           <View style={styles.pager}>
             <PagerButton
-              label={prev ? prev.card.name : ''}
+              label={prev ? cardName(prev.card, t) : ''}
               direction="prev"
               onPress={prev ? () => goTo(prev.card.id) : undefined}
             />
             <Text style={styles.pagerCount}>{index + 1} / {byInterest.length}</Text>
             <PagerButton
-              label={next ? next.card.name : ''}
+              label={next ? cardName(next.card, t) : ''}
               direction="next"
               onPress={next ? () => goTo(next.card.id) : undefined}
             />
@@ -142,18 +131,19 @@ export default function CardDetailScreen() {
   );
 }
 
-function BackRow({ onPress }: { onPress: () => void }) {
+function BackRow({ onPress, label }: { onPress: () => void; label: string }) {
   return (
     <View style={styles.backRow}>
       <Pressable onPress={onPress} hitSlop={8} style={({ pressed }) => [styles.back, pressed && { opacity: 0.6 }]}>
         <FontAwesome name="chevron-left" size={14} color={ink} />
-        <Text style={styles.backText}>Résultats</Text>
+        <Text style={styles.backText}>{label}</Text>
       </Pressable>
     </View>
   );
 }
 
 function ScoreColumn({ label, score }: { label: string; score: number | undefined }) {
+  const t = useT();
   const color = scoreToColor(score);
   return (
     <View style={styles.scoreCol}>
@@ -161,7 +151,7 @@ function ScoreColumn({ label, score }: { label: string; score: number | undefine
       <View style={[styles.scorePill, { backgroundColor: color }]}>
         <Text style={styles.scoreValue}>{formatScore(score)}</Text>
       </View>
-      <Text style={styles.scoreName}>{scoreLabel(score)}</Text>
+      <Text style={styles.scoreName}>{scoreName(score, t)}</Text>
     </View>
   );
 }

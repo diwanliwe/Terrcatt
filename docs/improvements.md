@@ -267,3 +267,19 @@ and make the app's name obvious; the explanation of the game at the end was conf
 - **Not on screen any more**: the client's key phrase « Les terrasses de culture, un
   patrimoine paysager face au changement climatique » (removed by choice for a shorter
   screen; still in the PWA description), to confirm with the client.
+
+## English and Italian versions (2026-10-04)
+
+- `i18n/`: `fr.ts` (reference), `en.ts`, `it.ts`, `useT()`, `<Rich>` for bold key
+  words, `LanguageSwitcher` (FR / EN / IT) on the welcome screens and in « En savoir
+  plus ». Detected language for new participants, choice stored in the snapshot and
+  logged (`language` event) so the analysis can split answers by language.
+- Cards: English and Italian draw the translated title on the title-less artwork
+  (top band, Arial bold like the designer's titles, smaller font for long titles).
+- **To review by the team before going live**: the English and Italian texts are a
+  first draft, in particular the 18 card titles and the study explanations
+  (`cards` in `i18n/en.ts` and `i18n/it.ts`). Italian uses « tu », French « vous ».
+- French typography fixed on the way: non-breaking spaces before `: ! ?` and inside
+  « » (e.g. « Toutes les cartes sont notées ! » no longer leaves the « ! » alone).
+- Welcome screen: Version C added (Version B layout with Marianne Cohen's terraces
+  photograph) for the client's comparison.

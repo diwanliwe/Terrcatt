@@ -3,6 +3,7 @@ import { StyleSheet, View, Text, Pressable } from 'react-native';
 import { ResultEntry, AGREEMENT_META, AGREEMENT_ORDER } from './resultsData';
 import { type, space, accent } from './theme';
 import { Reveal, TIMING } from './Reveal';
+import { useT, Rich } from '@/i18n';
 
 function countAgreements(entries: ResultEntry[]) {
   const counts = { accord: 0, nuance: 0, desaccord: 0 };
@@ -12,13 +13,15 @@ function countAgreements(entries: ResultEntry[]) {
 
 /** One-line verdict: "Vous partagez le regard de l'étude sur 11 cartes sur 15". */
 export function Headline({ entries }: { entries: ResultEntry[] }) {
+  const t = useT();
   const counts = countAgreements(entries);
   const shared = counts.accord + counts.nuance;
   return (
-    <Text style={styles.headline}>
-      Vous partagez le regard de l'étude{'\n'}sur{' '}
-      <Text style={styles.strong}>{shared} cartes sur {entries.length}</Text>
-    </Text>
+    <Rich
+      text={t.results.headline(shared, entries.length)}
+      style={styles.headline}
+      strongStyle={styles.strong}
+    />
   );
 }
 
@@ -33,6 +36,7 @@ interface AgreementDotsProps {
 
 /** One dot per card coloured by perspective, plus the legend. */
 export function AgreementDots({ entries, activeIndex, onDotPress, animateFrom }: AgreementDotsProps) {
+  const t = useT();
   const counts = countAgreements(entries);
   return (
     <View style={styles.dotsWrap}>
@@ -64,7 +68,7 @@ export function AgreementDots({ entries, activeIndex, onDotPress, animateFrom }:
           <View key={a} style={styles.legendItem}>
             <View style={[styles.legendDot, { backgroundColor: AGREEMENT_META[a].color }]} />
             <Text style={styles.legendText}>
-              {counts[a]} {(counts[a] > 1 ? AGREEMENT_META[a].plural : AGREEMENT_META[a].label).toLowerCase()}
+              {counts[a]} {(counts[a] > 1 ? t.results.agreement[a].plural : t.results.agreement[a].label).toLowerCase()}
             </Text>
           </View>
         ))}
@@ -74,8 +78,9 @@ export function AgreementDots({ entries, activeIndex, onDotPress, animateFrom }:
 }
 
 /** Call to action under the cards. */
-export function TapHint({ text = 'Cliquez sur une carte pour en savoir plus' }: { text?: string }) {
-  return <Text style={styles.hintText}>{text}</Text>;
+export function TapHint({ text }: { text?: string }) {
+  const t = useT();
+  return <Text style={styles.hintText}>{text ?? t.results.tapHint}</Text>;
 }
 
 const styles = StyleSheet.create({

@@ -3,6 +3,8 @@ import { StyleSheet, View, Text, ScrollView, Pressable, Linking, Switch, Platfor
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { useRouter } from 'expo-router';
 import { useCards } from '@/context/CardContext';
+import { LanguageSwitcher } from '@/components/LanguageSwitcher';
+import { useT } from '@/i18n';
 
 const CONTACT_EMAIL = 'marianne.cohen@sorbonne-universite.fr';
 
@@ -10,37 +12,37 @@ const CONTACT_EMAIL = 'marianne.cohen@sorbonne-universite.fr';
 // names and roles (meeting of 25 Sept 2026).
 // Published work behind the game. The study scores players compare themselves
 // with come from these studies.
-const PUBLICATIONS: { title: string; detail: string; url: string }[] = [
+// Titles are the published (English) titles; the detail line is translated.
+const PUBLICATIONS: { key: 'resilience' | 'erosion' | 'story'; title: string; url: string }[] = [
   {
+    key: 'resilience',
     title: 'Resilience of Terraced Landscapes to Human and Natural Impacts',
-    detail: 'Le Vot, Cohen, Nowak, Passy, Sumera. Land, 2024. Accès libre.',
     url: 'https://doi.org/10.3390/land13050592',
   },
   {
+    key: 'erosion',
     title: 'Do Terraced Landscapes Reduce Erosion?',
-    detail: 'Cohen, Kerverdo, Nowak, Gorini, Rabaute, Le Vot. Prépublication SSRN, 2026.',
     url: 'https://papers.ssrn.com/sol3/papers.cfm?abstract_id=7029382',
   },
   {
-    title: 'Projet STORY',
-    detail: 'Risques et sociétés dans le bassin de la Roya : le programme dont Terrcatt est issu.',
+    key: 'story',
+    title: 'STORY',
     url: 'https://projetstory.wordpress.com/',
   },
 ];
 
 // Card illustrations are deposited on HAL (MediHAL) under a Creative Commons
 // licence. TODO: confirm the exact variant (e.g. CC BY 4.0) with the client.
+// The citation keeps the deposit's original (French) title in every language.
 const ILLUSTRATIONS_CREDIT = {
   citation: 'Marianne Cohen, Maciej Nowak, Christian Gorini, Titouan Le Vot, Raphaël Kerverdo et al. '
     + '« Comment préserver et adapter les terrasses de culture au changement climatique ? », 2026.',
-  licence: 'Licence Creative Commons, dépôt HAL (MediHAL).',
   url: 'https://media.hal.science/view/index/docid/5750828',
 };
 
 // Welcome-screen valley view (onboarding), freely licensed: attribution required.
 const ENTRY_PHOTO_CREDIT = {
   citation: "Horizon06, « Breil-sur-Roya, vue depuis le sommet de l'Arpette ».",
-  licence: 'Licence CC BY-SA 4.0, Wikimedia Commons (contraste retouché).',
   url: 'https://commons.wikimedia.org/wiki/File:Breil-sur-Roya_Vue_depuis_le_sommet_de_l%27Arpette.jpg',
 };
 
@@ -48,88 +50,69 @@ const ENTRY_PHOTO_CREDIT = {
 // valley in April 2025. TODO: confirm the photographer's name for the credit.
 const BANNER_PHOTO = require('@/assets/images/roya-oliviers.jpg');
 
-const TEAM: { name: string; role: string }[] = [
-  { name: 'Marianne Cohen', role: 'Professeure de biogéographie, laboratoire Médiations, Faculté des Lettres' },
-  { name: 'Christian Gorini', role: 'Professeur de géosciences, ISTeP, Faculté des Sciences et Ingénierie' },
-  { name: 'Titouan Le Vot', role: 'Géographe et géomaticien' },
+// Roles are translated (t.about.teamRoles).
+const TEAM: { name: string; key: 'cohen' | 'gorini' | 'levot' }[] = [
+  { name: 'Marianne Cohen', key: 'cohen' },
+  { name: 'Christian Gorini', key: 'gorini' },
+  { name: 'Titouan Le Vot', key: 'levot' },
 ];
 
 export default function SettingsScreen() {
   const router = useRouter();
   const { state, setAnimationsEnabled, setExpertMode, resetAll } = useCards();
   const [confirmingDelete, setConfirmingDelete] = useState(false);
+  const t = useT();
 
   const handleContact = () => {
-    Linking.openURL(`mailto:${CONTACT_EMAIL}?subject=Projet Terrcatt : prise de contact`);
+    Linking.openURL(`mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent(t.about.contactSubject)}`);
   };
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent}>
       <View style={styles.banner}>
         <Image source={BANNER_PHOTO} style={styles.bannerImage} resizeMode="cover" />
-        <Text style={styles.bannerCaption}>Oliveraie en terrasses, vallée de la Roya</Text>
+        <Text style={styles.bannerCaption}>{t.about.bannerCaption}</Text>
       </View>
 
       <View style={styles.projectHeader}>
-        <Text style={styles.projectName}>Projet Terrcatt</Text>
-        <Text style={styles.projectSubtitle}>
-          Terrasses de culture et reconstruction d'un territoire post-catastrophe
-        </Text>
+        <Text style={styles.projectName}>{t.about.projectName}</Text>
+        <Text style={styles.projectSubtitle}>{t.about.projectSubtitle}</Text>
         <Text style={styles.projectInstitution}>Sorbonne Université</Text>
       </View>
 
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Un jeu issu de la recherche</Text>
-        <Text style={styles.paragraph}>
-          Ce jeu est la version numérique d'une méthode participative de tri de cartes, conçue
-          par des chercheurs de Sorbonne Université dans le cadre du projet Terrcatt. Vos réponses
-          alimentent directement leurs travaux.
-        </Text>
-        <Text style={styles.paragraph}>
-          Le projet étudie les quelque 23 000 terrasses agricoles de la vallée de la Roya (Alpes
-          françaises), largement abandonnées mais jouant un rôle clé dans la résilience face aux
-          événements climatiques extrêmes comme la tempête Alex (octobre 2020).
-        </Text>
-        <Text style={styles.paragraph}>
-          Terrcatt est soutenu par l'Alliance Sorbonne Université et prolonge le programme STORY
-          (Risques et sociétés dans le bassin de la Roya), mené en lien avec les associations
-          locales.
-        </Text>
+        <Text style={styles.sectionTitle}>{t.about.researchTitle}</Text>
+        <Text style={styles.paragraph}>{t.about.researchBody1}</Text>
+        <Text style={styles.paragraph}>{t.about.researchBody2}</Text>
+        <Text style={styles.paragraph}>{t.about.researchBody3}</Text>
       </View>
 
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>L'équipe</Text>
+        <Text style={styles.sectionTitle}>{t.about.teamTitle}</Text>
         {TEAM.map((member) => (
           <View key={member.name} style={styles.memberRow}>
             <Text style={styles.memberName}>{member.name}</Text>
-            <Text style={styles.memberRole}>{member.role}</Text>
+            <Text style={styles.memberRole}>{t.about.teamRoles[member.key]}</Text>
           </View>
         ))}
       </View>
 
       <View style={styles.ctaBox}>
         <FontAwesome name="map-marker" size={24} color="#C4956A" style={styles.ctaIcon} />
-        <Text style={styles.ctaTitle}>Un projet similaire pour votre territoire ?</Text>
-        <Text style={styles.ctaDescription}>
-          Vous êtes confronté à des enjeux de réhabilitation paysagère, de gestion participative
-          du territoire ou de résilience post-catastrophe ? Contactez-nous pour explorer comment
-          cette méthodologie peut s'adapter à votre contexte.
-        </Text>
+        <Text style={styles.ctaTitle}>{t.about.ctaTitle}</Text>
+        <Text style={styles.ctaDescription}>{t.about.ctaBody}</Text>
         <Pressable
           style={({ pressed }) => [styles.ctaButton, pressed && styles.ctaButtonPressed]}
           onPress={handleContact}
         >
           <FontAwesome name="envelope" size={16} color="#fff" />
-          <Text style={styles.ctaButtonText}>Nous contacter</Text>
+          <Text style={styles.ctaButtonText}>{t.about.ctaButton}</Text>
         </Pressable>
       </View>
 
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Les travaux de recherche</Text>
-        <Text style={styles.paragraph}>
-          Le « regard de l'étude » affiché dans vos résultats provient des observations de terrain
-          publiées par l'équipe.
-        </Text>
+        <Text style={styles.sectionTitle}>{t.about.publicationsTitle}</Text>
+        <Text style={styles.paragraph}>{t.about.publicationsBody}</Text>
         {PUBLICATIONS.map((pub) => (
           <Pressable
             key={pub.url}
@@ -138,7 +121,7 @@ export default function SettingsScreen() {
           >
             <View style={styles.prefText}>
               <Text style={styles.linkTitle}>{pub.title}</Text>
-              <Text style={styles.memberRole}>{pub.detail}</Text>
+              <Text style={styles.memberRole}>{t.about.publicationDetails[pub.key]}</Text>
             </View>
             <FontAwesome name="external-link" size={14} color="#C4956A" />
           </Pressable>
@@ -146,34 +129,26 @@ export default function SettingsScreen() {
       </View>
 
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Crédits des illustrations</Text>
-        <Text style={styles.paragraph}>
-          Les illustrations des cartes sont réalisées d'après des photographies prises sur le
-          terrain dans la Roya par Marianne Cohen. Elles sont mises à disposition sous licence
-          Creative Commons.
-        </Text>
+        <Text style={styles.sectionTitle}>{t.about.creditsTitle}</Text>
+        <Text style={styles.paragraph}>{t.about.creditsCards}</Text>
         <Pressable
           style={({ pressed }) => [styles.linkRow, pressed && { opacity: 0.6 }]}
           onPress={() => Linking.openURL(ILLUSTRATIONS_CREDIT.url)}
         >
           <View style={styles.prefText}>
             <Text style={styles.memberRole}>{ILLUSTRATIONS_CREDIT.citation}</Text>
-            <Text style={styles.memberRole}>{ILLUSTRATIONS_CREDIT.licence}</Text>
+            <Text style={styles.memberRole}>{t.about.creditsCardsLicence}</Text>
           </View>
           <FontAwesome name="external-link" size={14} color="#C4956A" />
         </Pressable>
-        <Text style={styles.paragraph}>
-          Les photographies de terrasses (cette page et les fiches des cartes) ont été prises
-          dans la vallée de la Roya en avril 2025 par l'équipe du projet. La vue de la vallée
-          en page d'accueil est publiée sous licence libre :
-        </Text>
+        <Text style={styles.paragraph}>{t.about.creditsPhotos}</Text>
         <Pressable
           style={({ pressed }) => [styles.linkRow, pressed && { opacity: 0.6 }]}
           onPress={() => Linking.openURL(ENTRY_PHOTO_CREDIT.url)}
         >
           <View style={styles.prefText}>
             <Text style={styles.memberRole}>{ENTRY_PHOTO_CREDIT.citation}</Text>
-            <Text style={styles.memberRole}>{ENTRY_PHOTO_CREDIT.licence}</Text>
+            <Text style={styles.memberRole}>{t.about.creditsEntryPhotoLicence}</Text>
           </View>
           <FontAwesome name="external-link" size={14} color="#C4956A" />
         </Pressable>
@@ -182,14 +157,18 @@ export default function SettingsScreen() {
       <View style={styles.divider} />
 
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Préférences</Text>
+        <Text style={styles.sectionTitle}>{t.about.preferencesTitle}</Text>
         <View style={styles.prefRow}>
           <View style={styles.prefText}>
-            <Text style={styles.prefLabel}>Mode expert</Text>
-            <Text style={styles.prefHint}>
-              Cartes sans titre : devinez ce qu'elles illustrent et proposez votre propre titre.
-              Option en test.
-            </Text>
+            <Text style={styles.prefLabel}>{t.language.label}</Text>
+            <Text style={styles.prefHint}>{t.language.hint}</Text>
+          </View>
+          <LanguageSwitcher />
+        </View>
+        <View style={styles.prefRow}>
+          <View style={styles.prefText}>
+            <Text style={styles.prefLabel}>{t.about.expertLabel}</Text>
+            <Text style={styles.prefHint}>{t.about.expertHint}</Text>
           </View>
           <Switch
             value={state.expertMode}
@@ -200,8 +179,8 @@ export default function SettingsScreen() {
         </View>
         <View style={styles.prefRow}>
           <View style={styles.prefText}>
-            <Text style={styles.prefLabel}>Animations</Text>
-            <Text style={styles.prefHint}>Apparition animée des résultats</Text>
+            <Text style={styles.prefLabel}>{t.about.animationsLabel}</Text>
+            <Text style={styles.prefHint}>{t.about.animationsHint}</Text>
           </View>
           <Switch
             value={state.animationsEnabled}
@@ -216,8 +195,8 @@ export default function SettingsScreen() {
             onPress={() => router.push('/install')}
           >
             <View style={styles.prefText}>
-              <Text style={styles.prefLabel}>Installer l'application</Text>
-              <Text style={styles.prefHint}>Ajouter Terrcatt à votre écran d'accueil</Text>
+              <Text style={styles.prefLabel}>{t.about.installLabel}</Text>
+              <Text style={styles.prefHint}>{t.about.installHint}</Text>
             </View>
             <FontAwesome name="chevron-right" size={14} color="#BBB" />
           </Pressable>
@@ -227,19 +206,16 @@ export default function SettingsScreen() {
           onPress={() => router.push('/onboarding')}
         >
           <View style={styles.prefText}>
-            <Text style={styles.prefLabel}>Revoir l'introduction</Text>
-            <Text style={styles.prefHint}>Rejouer le tutoriel de démarrage</Text>
+            <Text style={styles.prefLabel}>{t.about.replayIntroLabel}</Text>
+            <Text style={styles.prefHint}>{t.about.replayIntroHint}</Text>
           </View>
           <FontAwesome name="chevron-right" size={14} color="#BBB" />
         </Pressable>
       </View>
 
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Mes données</Text>
-        <Text style={styles.paragraph}>
-          Vos réponses sont enregistrées anonymement. Supprimer vos données efface tout,
-          ici et sur nos serveurs, et redémarre l'application de zéro.
-        </Text>
+        <Text style={styles.sectionTitle}>{t.about.dataTitle}</Text>
+        <Text style={styles.paragraph}>{t.about.dataBody}</Text>
         <Pressable
           style={({ pressed }) => [
             styles.deleteButton,
@@ -254,12 +230,12 @@ export default function SettingsScreen() {
         >
           <FontAwesome name="trash-o" size={16} color={confirmingDelete ? '#fff' : '#D9534F'} />
           <Text style={[styles.deleteButtonText, confirmingDelete && { color: '#fff' }]}>
-            {confirmingDelete ? 'Confirmer la suppression définitive' : 'Supprimer mes données'}
+            {confirmingDelete ? t.about.deleteConfirm : t.about.deleteData}
           </Text>
         </Pressable>
         {confirmingDelete && (
           <Pressable onPress={() => setConfirmingDelete(false)} hitSlop={8}>
-            <Text style={styles.deleteCancel}>Annuler</Text>
+            <Text style={styles.deleteCancel}>{t.common.cancel}</Text>
           </Pressable>
         )}
       </View>

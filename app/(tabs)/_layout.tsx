@@ -5,6 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useClientOnlyValue } from '@/components/useClientOnlyValue';
 import { useCards } from '@/context/CardContext';
+import { useT } from '@/i18n';
 
 function TabBarIcon(props: {
   name: React.ComponentProps<typeof FontAwesome>['name'];
@@ -15,6 +16,7 @@ function TabBarIcon(props: {
 
 export default function TabLayout() {
   const { state } = useCards();
+  const t = useT();
   const insets = useSafeAreaInsets();
 
   // A participant who hasn't finished the qualification onboarding has no
@@ -49,7 +51,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Jeu',
+          title: t.tabs.game,
           headerShown: false,
           tabBarIcon: ({ color }) => <TabBarIcon name="gamepad" color={color} />,
         }}
@@ -57,7 +59,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="results"
         options={{
-          title: 'Résultats',
+          title: t.tabs.results,
           headerShown: false,
           tabBarIcon: ({ color }) => <TabBarIcon name="trophy" color={color} />,
         }}
@@ -65,7 +67,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="settings"
         options={{
-          title: 'En savoir plus',
+          title: t.tabs.about,
           tabBarIcon: ({ color }) => <TabBarIcon name="info-circle" color={color} />,
         }}
       />

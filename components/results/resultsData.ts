@@ -6,26 +6,7 @@ export const GROUND_TRUTH_SCORES: Record<number, number> = {
   10: 2, 11: 0, 12: -2, 13: -1, 14: -1, 15: 0, 16: 1, 17: -2, 18: 2,
 };
 
-export const GROUND_TRUTH_EXPLANATIONS: Record<number, string> = {
-  1: "L'abandon agricole favorise la dégradation des terrasses et la perte de biodiversité.",
-  2: "L'accumulation d'eau en amont de la murette est observée dans certaines terrasses ayant connu des glissements de terrain.",
-  3: "L'apiculture est favorable dans les terrasses où les plantes sont pollinisées par les insectes.",
-  4: "Le drainage des sols, avec la présence d'une sous-couche drainante en arrière de la couche de grosses pierres, est favorable à la stabilité des terrasses.",
-  5: "La moyenne montagne connaît une pluviosité modérée, mais une tendance à l'assèchement des sols.",
-  6: "Des murs mal entretenus jouent un rôle probable dans la fragilisation des terrasses.",
-  7: "L'oliveraie fleurie abrite une biodiversité et des interactions avec les pollinisateurs observées dans les oliveraies entretenues avec des pratiques peu intensives.",
-  8: "Un olivier planté au bord des murettes peut contribuer à dégrader les murs, mais il est favorable aux cultures associées.",
-  9: "Le passé agricole est favorable à la conservation des sols, et donc à une moindre vulnérabilité aux glissements.",
-  10: "Le patrimoine paysager est reconnu par l'Unesco, avec une dimension esthétique.",
-  11: "Une pente très forte peut favoriser la survenue de glissements sur les terrasses.",
-  12: "Une pluie très forte favorise les glissements de terrain sur les terrasses.",
-  13: "La proximité de la route modifie l'écoulement de l'eau.",
-  14: "La faune sauvage combinée à l'abandon agricole joue un rôle probable dans la dégradation des terrasses.",
-  15: "Le rôle de la faune sauvage est ambigu.",
-  16: "Les terrasses contiennent un peu plus d'eau que les versants non aménagés pendant les évènements extrêmes (crue, sécheresse).",
-  17: "Une roche peu cohésive (éboulis) est un facteur de fragilité aux glissements.",
-  18: "Une terrasse fleurie apporte un agrément esthétique et de la biodiversité.",
-};
+// The study's one-line explanation of each card is translated: see `cards` in i18n/fr.ts.
 
 // --- Score colors / labels ---
 
@@ -37,13 +18,7 @@ export const SCORE_COLORS: Record<string, string> = {
   '2': '#4CAF50',
 };
 
-export const SCORE_LABELS: Record<string, string> = {
-  '-2': 'Très défavorable',
-  '-1': 'Défavorable',
-  '0': 'Neutre',
-  '1': 'Favorable',
-  '2': 'Très favorable',
-};
+// Score names (« Très favorable »…) are translated: see `scale` in i18n/fr.ts.
 
 function lerpColor(a: string, b: string, t: number): string {
   const parseHex = (hex: string) => {
@@ -71,13 +46,6 @@ export function formatScore(score: number | undefined): string {
   return rounded > 0 ? `+${rounded}` : `${rounded}`;
 }
 
-export const STUDY_LABEL = "L'étude";
-
-export function scoreLabel(score: number | undefined): string {
-  if (score === undefined) return 'Non noté';
-  return SCORE_LABELS[`${Math.round(Math.max(-2, Math.min(2, score)))}`];
-}
-
 export function normalizeCompareScores(scores: Record<number, number>): Record<number, number> {
   const values = Object.values(scores);
   if (values.length === 0) return {};
@@ -95,26 +63,12 @@ export function normalizeCompareScores(scores: Record<number, number>): Record<n
 
 export type Agreement = 'accord' | 'nuance' | 'desaccord';
 
-export const AGREEMENT_META: Record<Agreement, { label: string; plural: string; color: string; description: string }> = {
+// Labels and descriptions are translated: see `results.agreement` in i18n/fr.ts.
+export const AGREEMENT_META: Record<Agreement, { color: string }> = {
   // Neutral palette on purpose: a different perspective is not a wrong answer.
-  desaccord: {
-    label: 'Regard différent',
-    plural: 'Regards différents',
-    color: '#7E57C2',
-    description: "Vous voyez cette carte autrement que l'étude",
-  },
-  nuance: {
-    label: 'Regard proche',
-    plural: 'Regards proches',
-    color: '#42A5F5',
-    description: 'Même tendance, intensité différente',
-  },
-  accord: {
-    label: 'Même regard',
-    plural: 'Mêmes regards',
-    color: '#26A69A',
-    description: "Vous voyez cette carte comme l'étude",
-  },
+  desaccord: { color: '#7E57C2' },
+  nuance: { color: '#42A5F5' },
+  accord: { color: '#26A69A' },
 };
 
 export const AGREEMENT_ORDER: Agreement[] = ['desaccord', 'nuance', 'accord'];
@@ -123,11 +77,6 @@ export function agreementOf(gap: number): Agreement {
   if (gap >= 2) return 'desaccord';
   if (gap >= 1) return 'nuance';
   return 'accord';
-}
-
-export function gapLabel(gap: number): string {
-  if (gap === 0) return 'Même note';
-  return `Écart : ${gap} point${gap > 1 ? 's' : ''}`;
 }
 
 // --- Result entries ---

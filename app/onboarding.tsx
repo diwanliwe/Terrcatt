@@ -6,6 +6,7 @@ import {
   Pressable,
   ScrollView,
   useWindowDimensions,
+  ImageSourcePropType,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import Animated, {
@@ -19,10 +20,14 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { CARDS, useCards, UserProfile, ProfileRole } from '@/context/CardContext';
 import { Card, MAX_LAYOUT_WIDTH } from '@/components/Card';
+import { LanguageSwitcher } from '@/components/LanguageSwitcher';
+import { useT, Rich } from '@/i18n';
 
 // Entry photograph: the Roya valley and Breil-sur-Roya seen from the Arpette summit.
 // Horizon06, CC BY-SA 4.0, Wikimedia Commons (credited in « En savoir plus »).
 const ENTRY_PHOTO = require('@/assets/images/roya-vallee.jpg');
+// Version C: Marianne Cohen's photograph of dry-stone terraces in the Roya (April 2025).
+const TERRACES_PHOTO = require('@/assets/images/roya-terrasses.jpg');
 
 
 const RATING_DOTS = [
@@ -33,35 +38,35 @@ const RATING_DOTS = [
   { score: '+2', color: '#4CAF50' },
 ];
 
+// Labels live in the translations (t.onboarding.roles / territory / sources).
 interface QuestionOption {
   value: string;
   emoji: string;
-  label: string;
 }
 
 const ROLE_OPTIONS: QuestionOption[] = [
-  { value: 'owner', emoji: '🏡', label: 'Propriétaire de terrasses ou de terrain' },
-  { value: 'public-actor', emoji: '🏛️', label: 'Élu·e ou acteur public' },
-  { value: 'researcher', emoji: '🔬', label: 'Chercheur·se ou étudiant·e' },
-  { value: 'agri-professional', emoji: '🚜', label: "Professionnel·le de l'agriculture ou du paysage" },
-  { value: 'resident', emoji: '🏘️', label: 'Habitant·e de la vallée' },
-  { value: 'curious', emoji: '👀', label: 'Curieux·se' },
+  { value: 'owner', emoji: '🏡' },
+  { value: 'public-actor', emoji: '🏛️' },
+  { value: 'researcher', emoji: '🔬' },
+  { value: 'agri-professional', emoji: '🚜' },
+  { value: 'resident', emoji: '🏘️' },
+  { value: 'curious', emoji: '👀' },
 ];
 
 const TERRITORY_OPTIONS: QuestionOption[] = [
-  { value: 'roya', emoji: '📍', label: "J'habite ou je connais bien la vallée de la Roya" },
-  { value: 'similar-territory', emoji: '🌍', label: 'Mon territoire fait face à des défis similaires' },
-  { value: 'no-link', emoji: '🗺️', label: 'Aucun lien particulier, je découvre' },
+  { value: 'roya', emoji: '📍' },
+  { value: 'similar-territory', emoji: '🌍' },
+  { value: 'no-link', emoji: '🗺️' },
 ];
 
 const SOURCE_OPTIONS: QuestionOption[] = [
-  { value: 'university', emoji: '🎓', label: "L'université ou l'équipe de recherche" },
-  { value: 'word-of-mouth', emoji: '💬', label: 'Bouche à oreille' },
-  { value: 'event', emoji: '🎪', label: 'Un atelier ou événement du projet' },
-  { value: 'social-media', emoji: '📱', label: 'Réseaux sociaux' },
-  { value: 'press', emoji: '📰', label: 'Presse ou média' },
-  { value: 'online-search', emoji: '🔎', label: 'Recherche en ligne' },
-  { value: 'other', emoji: '✨', label: 'Autre' },
+  { value: 'university', emoji: '🎓' },
+  { value: 'word-of-mouth', emoji: '💬' },
+  { value: 'event', emoji: '🎪' },
+  { value: 'social-media', emoji: '📱' },
+  { value: 'press', emoji: '📰' },
+  { value: 'online-search', emoji: '🔎' },
+  { value: 'other', emoji: '✨' },
 ];
 
 const DOT_CYCLE_MS = 2200;
@@ -123,7 +128,13 @@ function AnimatedRatingScale() {
 const KEN_BURNS_MS = 20000;
 const KEN_BURNS_SCALE = 1.1;
 
-function DriftingPhoto({ animated }: { animated: boolean }) {
+function DriftingPhoto({
+  animated,
+  source = ENTRY_PHOTO,
+}: {
+  animated: boolean;
+  source?: ImageSourcePropType;
+}) {
   const scale = useSharedValue(1);
 
   useEffect(() => {
@@ -134,7 +145,7 @@ function DriftingPhoto({ animated }: { animated: boolean }) {
 
   return (
     <Animated.Image
-      source={ENTRY_PHOTO}
+      source={source}
       style={[StyleSheet.absoluteFill, styles.image, animatedStyle]}
       resizeMode="cover"
     />
@@ -144,6 +155,7 @@ function DriftingPhoto({ animated }: { animated: boolean }) {
 type StepKey =
   | 'hook'
   | 'hookPhoto'
+  | 'hookTerraces'
   | 'role'
   | 'territory'
   | 'source'
@@ -152,11 +164,12 @@ type StepKey =
   | 'howVote'
   | 'howCompare';
 
-// Two candidate first screens shown one after another while the client compares them
+// Candidate first screens shown one after another while the client compares them
 // (then delete the other one, its step and the version badges).
 const STEPS: StepKey[] = [
   'hook',
   'hookPhoto',
+  'hookTerraces',
   'role',
   'territory',
   'source',
@@ -164,12 +177,6 @@ const STEPS: StepKey[] = [
   'howVote',
   'howCompare',
 ];
-
-/** Key words in a paragraph, bold so the text can be skimmed. `onLight` also darkens
- *  them; on the photo or on accent-coloured text they keep the inherited colour. */
-function Strong({ children, onLight = false }: { children: React.ReactNode; onLight?: boolean }) {
-  return <Text style={[styles.strong, onLight && styles.strongOnLight]}>{children}</Text>;
-}
 
 // "How it works" page: the cards go by one after another, as in the game, so the player
 // sees there are many of them. Same slide-out / slide-in feel as RateMode.
@@ -223,6 +230,7 @@ function CardCarousel({ size, animated }: { size: number; animated: boolean }) {
 const HOOK_VERSIONS: Partial<Record<StepKey, string>> = {
   hook: 'Version A : écran titre',
   hookPhoto: 'Version B : photo en haut',
+  hookTerraces: 'Version C : photo des terrasses',
 };
 
 function VersionBadge({ label, top }: { label: string; top: number }) {
@@ -238,6 +246,7 @@ export default function OnboardingScreen() {
   const insets = useSafeAreaInsets();
   const { width, height } = useWindowDimensions();
   const { state, setProfile, completeOnboarding } = useCards();
+  const t = useT();
   const [stepIndex, setStepIndex] = useState(0);
   // Revisit from « En savoir plus » (already qualified) vs first arrival (gated).
   const isRevisit = state.onboardingCompletedAt !== null;
@@ -284,6 +293,7 @@ export default function OnboardingScreen() {
 
   const renderOptions = (
     options: QuestionOption[],
+    labels: Record<string, string>,
     selectedValues: string[],
     onToggle: (value: string) => void
   ) => (
@@ -302,7 +312,7 @@ export default function OnboardingScreen() {
           >
             <Text style={styles.optionEmoji}>{option.emoji}</Text>
             <Text style={[styles.optionLabel, selected && styles.optionLabelSelected]}>
-              {option.label}
+              {labels[option.value]}
             </Text>
           </Pressable>
         );
@@ -314,25 +324,27 @@ export default function OnboardingScreen() {
     switch (step) {
       case 'hook':
       case 'hookPhoto':
+      case 'hookTerraces':
         // Rendered full-screen by renderHook(), outside the padded step container.
         return null;
       case 'role':
         return (
           <View style={styles.questionPage}>
-            <Text style={styles.title}>Qui êtes-vous ?</Text>
+            <Text style={styles.title}>{t.onboarding.roleTitle}</Text>
             <Text style={styles.subtitle}>
-              Votre profil nous aide à comparer les regards sur le paysage.
+              {t.onboarding.roleSubtitle}
             </Text>
-            {renderOptions(ROLE_OPTIONS, state.profile.roles, toggleRole)}
-            <Text style={styles.optionsHint}>Plusieurs réponses possibles</Text>
+            {renderOptions(ROLE_OPTIONS, t.onboarding.roles, state.profile.roles, toggleRole)}
+            <Text style={styles.optionsHint}>{t.onboarding.roleHint}</Text>
           </View>
         );
       case 'territory':
         return (
           <View style={styles.questionPage}>
-            <Text style={styles.title}>Quel est votre lien avec le territoire ?</Text>
+            <Text style={styles.title}>{t.onboarding.territoryTitle}</Text>
             {renderOptions(
               TERRITORY_OPTIONS,
+              t.onboarding.territory,
               state.profile.territoryLink ? [state.profile.territoryLink] : [],
               (value) => selectSingle('territoryLink', value)
             )}
@@ -341,9 +353,10 @@ export default function OnboardingScreen() {
       case 'source':
         return (
           <View style={styles.questionPage}>
-            <Text style={styles.title}>Comment avez-vous découvert Terrcatt ?</Text>
+            <Text style={styles.title}>{t.onboarding.sourceTitle}</Text>
             {renderOptions(
               SOURCE_OPTIONS,
+              t.onboarding.sources,
               state.profile.source ? [state.profile.source] : [],
               (value) => selectSingle('source', value)
             )}
@@ -353,12 +366,8 @@ export default function OnboardingScreen() {
         return (
           <View style={styles.narrativePage}>
             <CardCarousel size={carouselSize} animated={state.animationsEnabled} />
-            <Text style={styles.title}>Une carte, une situation</Text>
-            <Text style={styles.slideBody}>
-              Vous allez découvrir <Strong onLight>18 cartes</Strong>. Chacune montre une
-              terrasse dans <Strong onLight>une situation particulière</Strong> : une pente très
-              forte, des pluies abondantes, des ruches…
-            </Text>
+            <Text style={styles.title}>{t.onboarding.cardsTitle}</Text>
+            <Rich text={t.onboarding.cardsBody} style={styles.slideBody} strongStyle={styles.strongOnLight} />
           </View>
         );
       case 'howVote':
@@ -366,16 +375,11 @@ export default function OnboardingScreen() {
           <View style={styles.narrativePage}>
             <AnimatedRatingScale />
             <View style={styles.scaleLabels}>
-              <Text style={styles.scaleLabel}>Très défavorable</Text>
-              <Text style={styles.scaleLabel}>Très favorable</Text>
+              <Text style={styles.scaleLabel}>{t.scale['-2']}</Text>
+              <Text style={styles.scaleLabel}>{t.scale['2']}</Text>
             </View>
-            <Text style={styles.title}>Donnez votre avis</Text>
-            <Text style={styles.slideBody}>
-              Pour chaque carte, dites si cette situation est{' '}
-              <Strong onLight>favorable ou défavorable</Strong> à la{' '}
-              <Strong onLight>réhabilitation des terrasses</Strong>, de{' '}
-              <Strong onLight>-2 à +2</Strong>, selon votre ressenti.
-            </Text>
+            <Text style={styles.title}>{t.onboarding.voteTitle}</Text>
+            <Rich text={t.onboarding.voteBody} style={styles.slideBody} strongStyle={styles.strongOnLight} />
           </View>
         );
       case 'howCompare':
@@ -384,23 +388,21 @@ export default function OnboardingScreen() {
             <View style={styles.compareRow}>
               <View style={styles.compareChip}>
                 <Text style={styles.compareEmoji}>🙋</Text>
-                <Text style={styles.compareLabel}>Votre regard</Text>
+                <Text style={styles.compareLabel}>{t.onboarding.compareYou}</Text>
               </View>
               <Text style={styles.compareArrow}>⇄</Text>
               <View style={styles.compareChip}>
                 <Text style={styles.compareEmoji}>🔬</Text>
-                <Text style={styles.compareLabel}>L'étude</Text>
+                <Text style={styles.compareLabel}>{t.onboarding.compareStudy}</Text>
               </View>
             </View>
-            <Text style={styles.title}>Il n'y a pas de mauvaise réponse</Text>
-            <Text style={styles.slideBody}>
-              Ce n'est <Strong onLight>pas un test</Strong> : nous voulons simplement connaître{' '}
-              <Strong onLight>votre point de vue</Strong>.
-            </Text>
-            <Text style={[styles.slideBody, styles.slideBodyLast]}>
-              À la fin, découvrez comment votre regard se compare aux{' '}
-              <Strong onLight>résultats de l'étude scientifique</Strong>.
-            </Text>
+            <Text style={styles.title}>{t.onboarding.compareTitle}</Text>
+            <Rich text={t.onboarding.compareBody1} style={styles.slideBody} strongStyle={styles.strongOnLight} />
+            <Rich
+              text={t.onboarding.compareBody2}
+              style={[styles.slideBody, styles.slideBodyLast]}
+              strongStyle={styles.strongOnLight}
+            />
           </View>
         );
     }
@@ -419,15 +421,15 @@ export default function OnboardingScreen() {
     }
   })();
 
-  const isHook = step === 'hook' || step === 'hookPhoto';
+  const isHook = step === 'hook' || step === 'hookPhoto' || step === 'hookTerraces';
   const isExplanation = step === 'howCards' || step === 'howVote';
   const buttonLabel = isLastStep
-    ? 'Commencer'
+    ? t.common.start
     : isHook
-      ? 'Découvrir'
+      ? t.common.discover
       : isExplanation
-        ? 'Suivant'
-        : 'Valider';
+        ? t.common.next
+        : t.common.validate;
 
   const renderFooter = (onPhoto: boolean) => (
     <View style={styles.footer}>
@@ -461,43 +463,35 @@ export default function OnboardingScreen() {
         style={StyleSheet.absoluteFill}
       />
       <VersionBadge label={HOOK_VERSIONS.hook ?? ''} top={insets.top} />
+      <View style={[styles.languageCorner, { top: insets.top + 12 }]}>
+        <LanguageSwitcher onPhoto />
+      </View>
       <View style={[styles.splashContent, { paddingTop: insets.top }]}>
         <Text style={styles.splashWordmark}>Terrcatt</Text>
-        <Text style={styles.splashPhrase}>
-          Un <Strong>jeu</Strong> de partage des connaissances pour aider à la décision de{' '}
-          <Strong>réhabiliter les terrasses</Strong>.
-        </Text>
+        <Rich text={t.onboarding.tagline} style={styles.splashPhrase} />
       </View>
-      <Text style={styles.splashValley}>
-        Dans la <Strong>vallée de la Roya</Strong>, entre Mercantour et Méditerranée,{' '}
-        <Strong>23 000 terrasses en pierre sèche</Strong>, un savoir-faire{' '}
-        <Strong>reconnu par l'UNESCO</Strong>.
-      </Text>
+      <Rich text={t.onboarding.valley} style={styles.splashValley} />
       <View style={{ paddingBottom: insets.bottom + 20 }}>{renderFooter(true)}</View>
     </View>
   );
 
   // Version B: the photograph fills the top half with rounded bottom corners, the same
   // three lines of text below on the page background.
-  const renderHookPhoto = () => (
+  const renderHookPhoto = (photo: ImageSourcePropType, badge: string) => (
     <View style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         {/* Short screens give the photo less room so the three lines stay above the fold. */}
-        <View style={[styles.photoHalf, { height: height < 720 ? height * 0.38 : Math.min(height * 0.5, 560) }]}>
-          <DriftingPhoto animated={state.animationsEnabled} />
+        <View style={[styles.photoHalf, { height: height < 720 ? height * 0.32 : Math.min(height * 0.5, 560) }]}>
+          <DriftingPhoto animated={state.animationsEnabled} source={photo} />
         </View>
-        <VersionBadge label={HOOK_VERSIONS.hookPhoto ?? ''} top={insets.top} />
+        <VersionBadge label={badge} top={insets.top} />
+        <View style={[styles.languageCorner, { top: insets.top + 12 }]}>
+          <LanguageSwitcher onPhoto />
+        </View>
         <View style={[styles.photoHalfText, { maxWidth: MAX_LAYOUT_WIDTH }]}>
           <Text style={styles.photoHalfName}>Terrcatt</Text>
-          <Text style={styles.photoHalfPhrase}>
-            Un <Strong>jeu</Strong> de partage des connaissances pour aider à la décision de{' '}
-            <Strong>réhabiliter les terrasses</Strong>.
-          </Text>
-          <Text style={styles.photoHalfValley}>
-            Dans la <Strong onLight>vallée de la Roya</Strong>, entre Mercantour et
-            Méditerranée, <Strong onLight>23 000 terrasses en pierre sèche</Strong>, un
-            savoir-faire <Strong onLight>reconnu par l'UNESCO</Strong>.
-          </Text>
+          <Rich text={t.onboarding.tagline} style={styles.photoHalfPhrase} />
+          <Rich text={t.onboarding.valley} style={styles.photoHalfValley} strongStyle={styles.strongOnLight} />
         </View>
       </ScrollView>
       <View style={{ paddingBottom: insets.bottom + 20 }}>{renderFooter(false)}</View>
@@ -505,14 +499,16 @@ export default function OnboardingScreen() {
   );
 
   if (step === 'hook') return renderHook();
-  if (step === 'hookPhoto') return renderHookPhoto();
+  if (step === 'hookPhoto') return renderHookPhoto(ENTRY_PHOTO, HOOK_VERSIONS.hookPhoto ?? '');
+  // Version C: same layout as B, with Marianne Cohen's terraces photograph.
+  if (step === 'hookTerraces') return renderHookPhoto(TERRACES_PHOTO, HOOK_VERSIONS.hookTerraces ?? '');
 
   return (
     <View style={[styles.container, { paddingTop: insets.top, paddingBottom: insets.bottom + 20 }]}>
       <View style={styles.header}>
         {stepIndex > 0 ? (
           <Pressable onPress={goBack} hitSlop={10}>
-            <Text style={styles.backText}>← Retour</Text>
+            <Text style={styles.backText}>{t.common.back}</Text>
           </Pressable>
         ) : (
           <View />
@@ -566,6 +562,12 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     paddingTop: 8,
+  },
+  // Language choice on the welcome screens, so a visitor can switch before reading.
+  languageCorner: {
+    position: 'absolute',
+    left: 16,
+    zIndex: 10,
   },
   versionBadge: {
     position: 'absolute',
@@ -672,9 +674,6 @@ const styles = StyleSheet.create({
   carousel: {
     alignItems: 'center',
     marginBottom: 28,
-  },
-  strong: {
-    fontWeight: '800',
   },
   strongOnLight: {
     color: '#2B2620',

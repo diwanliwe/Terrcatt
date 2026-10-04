@@ -1,4 +1,5 @@
 import React from 'react';
+import { useT, useLanguage, cardName, cardArtwork } from '@/i18n';
 import { StyleSheet, View, Text, Image, Pressable } from 'react-native';
 import { CARD_BG } from '@/components/Card';
 import {
@@ -64,6 +65,8 @@ const CARD_BORDER = 4;
 
 export function ResultCard({ entry, width, onPress, detailed = true, imageRatio = 1, onFooterHeight }: ResultCardProps) {
   const meta = AGREEMENT_META[entry.agreement];
+  const t = useT();
+  const language = useLanguage();
   const imageHeight = width * imageRatio;
 
   return (
@@ -76,21 +79,21 @@ export function ResultCard({ entry, width, onPress, detailed = true, imageRatio 
       ]}
     >
       <View style={[styles.imageWrap, { height: imageHeight }]}>
-        <Image source={entry.card.image} style={styles.image} resizeMode="cover" />
+        <Image source={cardArtwork(entry.card, language)} style={styles.image} resizeMode="cover" />
       </View>
 
       <View
         style={styles.body}
         onLayout={onFooterHeight ? (e) => onFooterHeight(e.nativeEvent.layout.height + CARD_BORDER * 2) : undefined}
       >
-        <Text style={styles.name} numberOfLines={1}>{entry.card.name}</Text>
+        <Text style={styles.name} numberOfLines={1}>{cardName(entry.card, t)}</Text>
         {detailed ? (
           <>
             <View style={styles.scoresRow}>
-              <ScoreChip label="Vous" score={entry.userScore} />
-              <ScoreChip label="L'étude" score={entry.gtScore} />
+              <ScoreChip label={t.results.you} score={entry.userScore} />
+              <ScoreChip label={t.results.study} score={entry.gtScore} />
             </View>
-            <Text style={[styles.agreementLabel, { color: meta.color }]}>{meta.label}</Text>
+            <Text style={[styles.agreementLabel, { color: meta.color }]}>{t.results.agreement[entry.agreement].label}</Text>
           </>
         ) : null}
       </View>

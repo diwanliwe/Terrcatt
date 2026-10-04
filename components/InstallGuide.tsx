@@ -2,6 +2,7 @@ import React from 'react';
 import { StyleSheet, View, Text, Pressable } from 'react-native';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { useInstallState, InstallPlatform } from '@/lib/installPrompt';
+import { useT } from '@/i18n';
 
 /**
  * "Add Terrcatt to your home screen" explainer. Self-contained so it can live
@@ -9,56 +10,36 @@ import { useInstallState, InstallPlatform } from '@/lib/installPrompt';
  * step. Picks the right instructions for the visitor's device.
  */
 
-type Step = { icon: React.ComponentProps<typeof FontAwesome>['name']; text: string };
+type Icon = React.ComponentProps<typeof FontAwesome>['name'];
 
-const STEPS: Record<Exclude<InstallPlatform, 'native'>, { intro: string; steps: Step[] }> = {
-  ios: {
-    intro: 'Sur iPhone et iPad, l\'installation se fait depuis Safari.',
-    steps: [
-      { icon: 'share-square-o', text: 'Touchez le bouton Partager, en bas de l\'écran (le carré avec une flèche).' },
-      { icon: 'plus-square-o', text: 'Faites défiler le menu et touchez « Sur l\'écran d\'accueil ».' },
-      { icon: 'check', text: 'Touchez « Ajouter » en haut à droite. Terrcatt apparaît parmi vos applications.' },
-    ],
-  },
-  android: {
-    intro: 'Sur Android, l\'installation se fait depuis Chrome.',
-    steps: [
-      { icon: 'ellipsis-v', text: 'Touchez le menu à trois points, en haut à droite de Chrome.' },
-      { icon: 'download', text: 'Touchez « Installer l\'application » ou « Ajouter à l\'écran d\'accueil ».' },
-      { icon: 'check', text: 'Confirmez. Terrcatt apparaît parmi vos applications.' },
-    ],
-  },
-  desktop: {
-    intro: 'Sur ordinateur, Chrome et Edge peuvent installer Terrcatt comme une application.',
-    steps: [
-      { icon: 'download', text: 'Cliquez sur l\'icône d\'installation à droite de la barre d\'adresse.' },
-      { icon: 'check', text: 'Confirmez. Terrcatt s\'ouvre dans sa propre fenêtre, sans onglets.' },
-    ],
-  },
+// Step texts are translated (t.install.<platform>.steps); icons follow the same order.
+const STEP_ICONS: Record<Exclude<InstallPlatform, 'native'>, Icon[]> = {
+  ios: ['share-square-o', 'plus-square-o', 'check'],
+  android: ['ellipsis-v', 'download', 'check'],
+  desktop: ['download', 'check'],
 };
 
 export function InstallGuide({ compact = false }: { compact?: boolean }) {
   const { platform, installed, canPrompt, promptInstall } = useInstallState();
+  const t = useT();
 
   if (platform === 'native' || installed) {
     return (
       <View style={styles.doneBox}>
         <FontAwesome name="check-circle" size={28} color="#5B9A6C" />
-        <Text style={styles.doneTitle}>Terrcatt est déjà installé</Text>
-        <Text style={styles.doneText}>Vous utilisez l'application depuis votre écran d'accueil.</Text>
+        <Text style={styles.doneTitle}>{t.install.installedTitle}</Text>
+        <Text style={styles.doneText}>{t.install.installedText}</Text>
       </View>
     );
   }
 
-  const guide = STEPS[platform];
+  const guide = t.install[platform];
+  const icons = STEP_ICONS[platform];
 
   return (
     <View style={styles.container}>
       {!compact && (
-        <Text style={styles.lead}>
-          Terrcatt fonctionne sans téléchargement. Ajoutez-le à votre écran d'accueil pour
-          le retrouver comme une application, en plein écran.
-        </Text>
+        <Text style={styles.lead}>{t.install.lead}</Text>
       )}
 
       {canPrompt && (
@@ -67,19 +48,19 @@ export function InstallGuide({ compact = false }: { compact?: boolean }) {
           onPress={promptInstall}
         >
           <FontAwesome name="download" size={16} color="#fff" />
-          <Text style={styles.installButtonText}>Installer Terrcatt</Text>
+          <Text style={styles.installButtonText}>{t.install.button}</Text>
         </Pressable>
       )}
 
-      <Text style={styles.intro}>{canPrompt ? 'Ou manuellement :' : guide.intro}</Text>
+      <Text style={styles.intro}>{canPrompt ? t.install.orManually : guide.intro}</Text>
       <View style={styles.steps}>
         {guide.steps.map((step, i) => (
           <View key={i} style={styles.stepRow}>
             <View style={styles.stepBadge}>
               <Text style={styles.stepNumber}>{i + 1}</Text>
             </View>
-            <FontAwesome name={step.icon} size={20} color="#C4956A" style={styles.stepIcon} />
-            <Text style={styles.stepText}>{step.text}</Text>
+            <FontAwesome name={icons[i]} size={20} color="#C4956A" style={styles.stepIcon} />
+            <Text style={styles.stepText}>{step}</Text>
           </View>
         ))}
       </View>
