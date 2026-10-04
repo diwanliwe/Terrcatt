@@ -24,9 +24,11 @@ interface CardProps {
   style?: ViewStyle;
   size?: 'normal' | 'small' | 'medium' | 'large';
   rank?: number;
+  /** Show the artwork without its title (expert mode). */
+  untitled?: boolean;
 }
 
-export function Card({ card, style, size = 'normal', rank }: CardProps) {
+export function Card({ card, style, size = 'normal', rank, untitled = false }: CardProps) {
   const { cardWidth, cardHeight } = useCardSize();
   const shadowStyle =
     size === 'small' ? styles.shadowSmall :
@@ -40,7 +42,11 @@ export function Card({ card, style, size = 'normal', rank }: CardProps) {
   return (
     <View style={[styles.shadow, shadowStyle, style]}>
       <View style={[styles.inner, innerStyle]}>
-        <Image source={card.image} style={styles.image} resizeMode="cover" />
+        <Image
+          source={untitled ? card.imageUntitled : card.image}
+          style={styles.image}
+          resizeMode="cover"
+        />
         {rank !== undefined && (
           <View style={styles.rankBadge}>
             <Text style={styles.rankText}>#{rank}</Text>

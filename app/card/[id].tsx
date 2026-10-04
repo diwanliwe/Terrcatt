@@ -5,6 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { useResultEntries } from '@/components/results/useResultEntries';
+import { useCards } from '@/context/CardContext';
 import {
   AGREEMENT_META,
   GROUND_TRUTH_EXPLANATIONS,
@@ -28,6 +29,7 @@ export default function CardDetailScreen() {
   const insets = useSafeAreaInsets();
   const { width, height } = useWindowDimensions();
   const { byInterest, isComplete } = useResultEntries();
+  const { state } = useCards();
 
   const index = byInterest.findIndex((e) => e.card.id === Number(id));
   const entry = index >= 0 ? byInterest[index] : null;
@@ -51,6 +53,8 @@ export default function CardDetailScreen() {
   const { card, userScore, gtScore, gap, agreement } = entry;
   const meta = AGREEMENT_META[agreement];
   const explanation = GROUND_TRUTH_EXPLANATIONS[card.id] ?? 'Aucune explication disponible.';
+  // Expert mode: the title the player proposed before seeing the real one.
+  const ownTitle = state.cardTitles[card.id];
   // Subtract the scroll container's horizontal padding, otherwise the column
   // overflows on narrow windows and the hero sits off-center.
   const contentWidth = Math.min(width - space.sm * 2, MAX_WIDTH);
@@ -82,6 +86,7 @@ export default function CardDetailScreen() {
             />
             <View style={styles.heroText}>
               <Text style={styles.title}>{card.name}</Text>
+              {ownTitle ? <Text style={styles.ownTitle}>Votre titre : « {ownTitle} »</Text> : null}
             </View>
           </View>
 
@@ -109,12 +114,12 @@ export default function CardDetailScreen() {
               terrasses.
             </Text>
             <Image
-              source={require('@/assets/cards/patrimoine-paysager.jpg')}
-              style={[styles.slotImage, { height: contentWidth * 0.52 }]}
+              source={require('@/assets/images/roya-terrasses.jpg')}
+              style={[styles.slotImage, { height: contentWidth * 0.62 }]}
               resizeMode="cover"
             />
             <Text style={styles.slotCaption}>
-              Les terrasses de culture de la vallée de la Roya.
+              Terrasses de culture et murs en pierre sèche, vallée de la Roya (avril 2025).
             </Text>
           </View>
 
@@ -194,6 +199,7 @@ const styles = StyleSheet.create({
   heroFade: { position: 'absolute', left: 0, right: 0, bottom: 0, height: '55%' },
   heroText: { paddingHorizontal: space.xs },
   title: { ...type.title, fontSize: 28, lineHeight: 34, textAlign: 'center' },
+  ownTitle: { ...type.caption, textAlign: 'center', marginTop: 4, fontStyle: 'italic' },
 
   compareCard: {
     backgroundColor: surface,

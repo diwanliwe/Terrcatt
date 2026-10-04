@@ -31,7 +31,10 @@ content, and layout of each screen. Read it before touching onboarding code.
 
 ## Screen flow
 
-Hook → Role → Territory link → Acquisition source → Bridge → app (Rate tab)
+Paragraphs bold their key words (`Strong` in `app/onboarding.tsx`) so they can be read
+diagonally: e.g. « 18 cartes », « favorable ou défavorable », « pas un test ».
+
+Hook → Role → Territory link → Acquisition source → How it works (3 pages) → app (Rate tab)
 
 ### S1 — Hook (narrative)
 
@@ -39,16 +42,23 @@ Purpose: emotional + credibility hook in one screen. Condensed from the current 
 story pages (welcome + heritage) — one strong screen beats two good ones when four
 questions follow.
 
-- Image: card 14 (Terrasses), same framed style as today.
-- Title: **« Bienvenue sur Terrcatt »**
-- Body: « En octobre 2020, la tempête Alex a dévasté la vallée de la Roya. Ses 23 000
-  terrasses de culture, largement abandonnées, pourraient être une clé de la
-  reconstruction. Ce projet de recherche participatif (Sorbonne Université) a besoin
-  de votre regard. »
-- CTA: « Suivant »
-
-Note the closing sentence: "a besoin de votre regard" frames the questions that follow
-as contribution, not as a form. That framing is what makes a no-skip onboarding feel fair.
+- Layout (chosen 4 Oct 2026, out of three versions): title screen. The photograph
+  fills the whole screen behind a dark gradient, with a slow Ken Burns push-in. Photo:
+  the Roya valley and Breil-sur-Roya from the Arpette summit
+  (`assets/images/roya-vallee.jpg`, Horizon06, CC BY-SA 4.0, contrast retouched,
+  credited in « En savoir plus »). No icon.
+- Comparison in progress (4 Oct 2026): a second candidate, step `hookPhoto` (« Version
+  B »), shows the photo on the top half with rounded bottom corners and the same three
+  lines below on the page background. Both screens carry a version badge
+  (`HOOK_VERSIONS` in `app/onboarding.tsx`); keep one, delete the other step and badges.
+- Text, in this order (client asked for a positive anchoring, no storm, short):
+  1. Name: **« Terrcatt »**, large, so the app's name is known at first glance.
+  2. What it is: « Un jeu de partage des connaissances pour aider à la décision de
+     réhabiliter les terrasses. »
+  3. The valley, at the bottom above the button: « Dans la vallée de la Roya, entre
+     Mercantour et Méditerranée, 23 000 terrasses en pierre sèche, un savoir-faire
+     reconnu par l'UNESCO. »
+- CTA: « Découvrir »
 
 ### S2 — Role: « Qui êtes-vous ? »
 
@@ -99,24 +109,32 @@ Purpose: measure which channels bring which personas (lead-magnet analytics).
   - ✨ Autre
 - Stored as `profile.source`.
 
-### S5 — Bridge (narrative)
+### S5 — How it works (3 narrative pages, steps `howCards` / `howVote` / `howCompare`)
 
-Purpose: set expectations in one glance, then hand off to the app. This is *not* a
-tutorial — it answers "what am I about to do and why is it worth 5 minutes".
+Replaced the single « À vous de jouer » page on 4 Oct 2026: on the client call, several
+people found it confusing. One idea per page. Vocabulary: a card shows a terrace in a
+**« situation »** (not « contrainte »: some situations are favourable, e.g. beehives),
+and the question is always about **« la réhabilitation des terrasses »**, the same
+wording as the tagline.
 
-- No wall of text: animated scale illustration + title + 3 short emoji bullet rows +
-  a highlighted note box.
-- Top illustration: the −2…+2 rating dots, **animated** — each dot springs up bigger
-  in turn (looping left→right, ~900ms per dot), as if being selected. This teaches
-  the scale without a sentence of explanation.
-- Title: **« À vous de jouer »**
-- Bullets:
-  - 🃏 « 18 cartes, chacune une caractéristique du paysage de la Roya. »
-  - 🗳️ « Votez : favorable ou défavorable à la réhabilitation des terrasses ? »
-  - 🔭 « À la fin, explorez vos résultats et découvrez l'étude scientifique. »
-- Note box (accent-tinted): « Il n'y a pas de mauvaise réponse : ce jeu croise ce que
-  pensent les participants avec ce que dit la science. »
-- CTA: « Commencer » → closes onboarding, lands on the Rate tab.
+1. **« Une carte, une situation »**: one card at a time, drawn with the game's `Card`
+   component (smaller than in the game), no counter. The cards go by on
+   their own: the first change after 0.7 s (so players tapping through still see it),
+   then every ~2 s, sliding out to the left and in from the right as in the
+   game, so the player sees there are many of them (`CardCarousel`; with animations
+   off they swap without sliding).
+   « Vous allez découvrir 18 cartes. Chacune montre une terrasse dans une situation
+   particulière : une pente très forte, des pluies abondantes, des ruches… » CTA
+   « Suivant ».
+2. **« Donnez votre avis »**: the animated -2…+2 dots with « Très défavorable » /
+   « Très favorable » under the ends, then the same title + paragraph layout as the
+   other pages: « Pour chaque carte, dites si cette situation est favorable ou
+   défavorable à la réhabilitation des terrasses, de -2 à +2, selon votre ressenti. »
+   CTA « Suivant ».
+3. **« Il n'y a pas de mauvaise réponse »**: two chips « Votre regard » ⇄ « L'étude ».
+   « Ce n'est pas un test : nous voulons simplement connaître votre point de vue. » and
+   « À la fin, découvrez comment votre regard se compare aux résultats de l'étude
+   scientifique. » CTA « Commencer » → closes onboarding, lands on the Rate tab.
 
 ## Tutorial strategy (deliberately NOT in onboarding)
 

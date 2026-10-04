@@ -44,7 +44,19 @@ export interface UserProfile {
  * research side needs (revisions, order effects) and can't be rebuilt later.
  */
 export interface InteractionEvent {
-  type: 'rate' | 'swipe1' | 'swipe2' | 'compare' | 'profile' | 'comment' | 'run' | 'onboarding';
+  type:
+    | 'rate'
+    | 'swipe1'
+    | 'swipe2'
+    | 'compare'
+    | 'profile'
+    | 'comment'
+    | 'run'
+    | 'onboarding'
+    /** Expert mode toggled (value 1 = on, 0 = off). */
+    | 'expert'
+    /** The player proposed a title for a card in expert mode (text lives in the snapshot's cardTitles). */
+    | 'title';
   at: number; // epoch ms
   /** Which playthrough this event belongs to (1-based) — runs must never be mixed in analysis. */
   run: number;
@@ -78,6 +90,11 @@ interface CardState {
   comments: Record<number, CardComment>;
   profile: UserProfile;
   animationsEnabled: boolean;
+  /** Expert mode (test option): cards are shown without their title and the
+   *  player may propose one. Logged as an `expert` event so runs can be told apart. */
+  expertMode: boolean;
+  /** Titles proposed by the player in expert mode, per card, for the current run. */
+  cardTitles: Record<number, string>;
 }
 
 type CardAction =
@@ -97,6 +114,8 @@ type CardAction =
   | { type: 'SET_COMMENT'; cardId: number; comment: CardComment }
   | { type: 'SET_PROFILE'; profile: Partial<UserProfile> }
   | { type: 'SET_ANIMATIONS_ENABLED'; enabled: boolean }
+  | { type: 'SET_EXPERT_MODE'; enabled: boolean }
+  | { type: 'SET_CARD_TITLE'; cardId: number; title: string }
   | { type: 'HYDRATE'; state: CardState }
   | { type: 'NEW_RUN' }
   | { type: 'COMPLETE_ONBOARDING' }
@@ -120,6 +139,9 @@ interface CardContextType {
   setComment: (cardId: number, comment: CardComment) => void;
   setProfile: (profile: Partial<UserProfile>) => void;
   setAnimationsEnabled: (enabled: boolean) => void;
+  setExpertMode: (enabled: boolean) => void;
+  /** Expert mode: the player's own title for a card (empty string clears it). */
+  setCardTitle: (cardId: number, title: string) => void;
   /** Wipes every local trace and starts as a brand-new anonymous participant. */
   resetAll: () => Promise<void>;
   /** Clears the game and starts the next run for the same participant. */
@@ -153,6 +175,8 @@ const initialState: CardState = {
     source: null,
   },
   animationsEnabled: true,
+  expertMode: false,
+  cardTitles: {},
 };
 
 function freshState(): CardState {
@@ -191,6 +215,7 @@ function cardReducer(state: CardState, action: CardAction): CardState {
         ratingScores: {},
         currentRatingIndex: 0,
         comments: {},
+        cardTitles: {},
       };
     }
     case 'SET_GAME_MODE':
@@ -293,6 +318,16 @@ function cardReducer(state: CardState, action: CardAction): CardState {
       };
     case 'SET_ANIMATIONS_ENABLED':
       return { ...state, animationsEnabled: action.enabled };
+    case 'SET_EXPERT_MODE':
+      if (state.expertMode === action.enabled) return state;
+      return { ...logged(state, { type: 'expert', value: action.enabled ? 1 : 0 }), expertMode: action.enabled };
+    case 'SET_CARD_TITLE': {
+      const title = action.title.trim();
+      const cardTitles = { ...state.cardTitles };
+      if (title) cardTitles[action.cardId] = title;
+      else delete cardTitles[action.cardId];
+      return { ...logged(state, { type: 'title', cardId: action.cardId }), cardTitles };
+    }
     case 'SET_PROFILE':
       return {
         ...logged(state, { type: 'profile' }),
@@ -323,7 +358,13 @@ export function CardProvider({ children }: { children: ReactNode }) {
       dispatch({
         type: 'HYDRATE',
         state: stored
-          ? { ...stored, runIndex: stored.runIndex ?? 1, onboardingCompletedAt: stored.onboardingCompletedAt ?? null }
+          ? {
+              ...stored,
+              runIndex: stored.runIndex ?? 1,
+              onboardingCompletedAt: stored.onboardingCompletedAt ?? null,
+              expertMode: stored.expertMode ?? false,
+              cardTitles: stored.cardTitles ?? {},
+            }
           : freshState(),
       });
       setHydrated(true);
@@ -453,6 +494,14 @@ export function CardProvider({ children }: { children: ReactNode }) {
     dispatch({ type: 'SET_ANIMATIONS_ENABLED', enabled });
   };
 
+  const setExpertMode = (enabled: boolean) => {
+    dispatch({ type: 'SET_EXPERT_MODE', enabled });
+  };
+
+  const setCardTitle = (cardId: number, title: string) => {
+    dispatch({ type: 'SET_CARD_TITLE', cardId, title });
+  };
+
   return (
     <CardContext.Provider
       value={{
@@ -473,6 +522,8 @@ export function CardProvider({ children }: { children: ReactNode }) {
         setComment,
         setProfile,
         setAnimationsEnabled,
+        setExpertMode,
+        setCardTitle,
         resetAll,
         startNewRun,
         completeOnboarding,
@@ -496,7 +547,11 @@ export function useCards() {
 export interface CardData {
   id: number;
   name: string;
+  /** Artwork with the French title baked in. */
   image: ImageSourcePropType;
+  /** Same artwork without any title: expert mode, and the future translated versions
+   *  (the app will draw the title in the player's language). */
+  imageUntitled: ImageSourcePropType;
 }
 
 // Card images - must use require() for static imports.
@@ -523,27 +578,47 @@ const cardImages: Record<string, ImageSourcePropType> = {
   'terrasse-fleurie': require('@/assets/cards/terrasse-fleurie.jpg'),
 };
 
-/** Card used as the generic "terrace" illustration outside the game (onboarding, detail page). */
-export const HERO_CARD_ID = 10;
+// Same designs without the title (received 30 Sept 2026), same crop and size.
+const untitledImages: Record<string, ImageSourcePropType> = {
+  'abandon-agricole': require('@/assets/cards/untitled/abandon-agricole.jpg'),
+  'accumulation-eau': require('@/assets/cards/untitled/accumulation-eau.jpg'),
+  'apiculture': require('@/assets/cards/untitled/apiculture.jpg'),
+  'drainage-eau': require('@/assets/cards/untitled/drainage-eau.jpg'),
+  'moyenne-montagne': require('@/assets/cards/untitled/moyenne-montagne.jpg'),
+  'murs-non-entretenus': require('@/assets/cards/untitled/murs-non-entretenus.jpg'),
+  'oliveraie-fleurie': require('@/assets/cards/untitled/oliveraie-fleurie.jpg'),
+  'olivier-murette': require('@/assets/cards/untitled/olivier-murette.jpg'),
+  'passe-agricole': require('@/assets/cards/untitled/passe-agricole.jpg'),
+  'patrimoine-paysager': require('@/assets/cards/untitled/patrimoine-paysager.jpg'),
+  'pente-tres-forte': require('@/assets/cards/untitled/pente-tres-forte.jpg'),
+  'pluies-abondantes': require('@/assets/cards/untitled/pluies-abondantes.jpg'),
+  'proximite-route': require('@/assets/cards/untitled/proximite-route.jpg'),
+  'faune-sauvage-abandon': require('@/assets/cards/untitled/faune-sauvage-abandon.jpg'),
+  'faune-sauvage': require('@/assets/cards/untitled/faune-sauvage.jpg'),
+  'stockage-eau': require('@/assets/cards/untitled/stockage-eau.jpg'),
+  'substrat-geologique': require('@/assets/cards/untitled/substrat-geologique.jpg'),
+  'terrasse-fleurie': require('@/assets/cards/untitled/terrasse-fleurie.jpg'),
+};
+
 
 // Constants: the 18 cards of the Terrcatt game (order follows the design folder)
 export const CARDS: CardData[] = [
-  { id: 1, name: 'Abandon agricole', image: cardImages['abandon-agricole'] },
-  { id: 2, name: "Accumulation d'eau au-dessus de la murette", image: cardImages['accumulation-eau'] },
-  { id: 3, name: 'Apiculture', image: cardImages['apiculture'] },
-  { id: 4, name: "Drainage de l'eau", image: cardImages['drainage-eau'] },
-  { id: 5, name: 'Moyenne montagne', image: cardImages['moyenne-montagne'] },
-  { id: 6, name: 'Murs non entretenus', image: cardImages['murs-non-entretenus'] },
-  { id: 7, name: 'Oliveraie fleurie', image: cardImages['oliveraie-fleurie'] },
-  { id: 8, name: "Olivier planté au bord d'une murette", image: cardImages['olivier-murette'] },
-  { id: 9, name: 'Passé agricole', image: cardImages['passe-agricole'] },
-  { id: 10, name: 'Patrimoine paysager', image: cardImages['patrimoine-paysager'] },
-  { id: 11, name: 'Pente très forte', image: cardImages['pente-tres-forte'] },
-  { id: 12, name: 'Pluies très abondantes', image: cardImages['pluies-abondantes'] },
-  { id: 13, name: "Proximité d'une route", image: cardImages['proximite-route'] },
-  { id: 14, name: "Rôle de la faune sauvage et de l'abandon agricole", image: cardImages['faune-sauvage-abandon'] },
-  { id: 15, name: 'Rôle de la faune sauvage', image: cardImages['faune-sauvage'] },
-  { id: 16, name: "Stockage de l'eau", image: cardImages['stockage-eau'] },
-  { id: 17, name: 'Substrat géologique fragile (éboulis)', image: cardImages['substrat-geologique'] },
-  { id: 18, name: 'Terrasse fleurie', image: cardImages['terrasse-fleurie'] },
+  { id: 1, name: 'Abandon agricole', image: cardImages['abandon-agricole'], imageUntitled: untitledImages['abandon-agricole'] },
+  { id: 2, name: "Accumulation d'eau au-dessus de la murette", image: cardImages['accumulation-eau'], imageUntitled: untitledImages['accumulation-eau'] },
+  { id: 3, name: 'Apiculture', image: cardImages['apiculture'], imageUntitled: untitledImages['apiculture'] },
+  { id: 4, name: "Drainage de l'eau", image: cardImages['drainage-eau'], imageUntitled: untitledImages['drainage-eau'] },
+  { id: 5, name: 'Moyenne montagne', image: cardImages['moyenne-montagne'], imageUntitled: untitledImages['moyenne-montagne'] },
+  { id: 6, name: 'Murs non entretenus', image: cardImages['murs-non-entretenus'], imageUntitled: untitledImages['murs-non-entretenus'] },
+  { id: 7, name: 'Oliveraie fleurie', image: cardImages['oliveraie-fleurie'], imageUntitled: untitledImages['oliveraie-fleurie'] },
+  { id: 8, name: "Olivier planté au bord d'une murette", image: cardImages['olivier-murette'], imageUntitled: untitledImages['olivier-murette'] },
+  { id: 9, name: 'Passé agricole', image: cardImages['passe-agricole'], imageUntitled: untitledImages['passe-agricole'] },
+  { id: 10, name: 'Patrimoine paysager', image: cardImages['patrimoine-paysager'], imageUntitled: untitledImages['patrimoine-paysager'] },
+  { id: 11, name: 'Pente très forte', image: cardImages['pente-tres-forte'], imageUntitled: untitledImages['pente-tres-forte'] },
+  { id: 12, name: 'Pluies très abondantes', image: cardImages['pluies-abondantes'], imageUntitled: untitledImages['pluies-abondantes'] },
+  { id: 13, name: "Proximité d'une route", image: cardImages['proximite-route'], imageUntitled: untitledImages['proximite-route'] },
+  { id: 14, name: "Rôle de la faune sauvage et de l'abandon agricole", image: cardImages['faune-sauvage-abandon'], imageUntitled: untitledImages['faune-sauvage-abandon'] },
+  { id: 15, name: 'Rôle de la faune sauvage', image: cardImages['faune-sauvage'], imageUntitled: untitledImages['faune-sauvage'] },
+  { id: 16, name: "Stockage de l'eau", image: cardImages['stockage-eau'], imageUntitled: untitledImages['stockage-eau'] },
+  { id: 17, name: 'Substrat géologique fragile (éboulis)', image: cardImages['substrat-geologique'], imageUntitled: untitledImages['substrat-geologique'] },
+  { id: 18, name: 'Terrasse fleurie', image: cardImages['terrasse-fleurie'], imageUntitled: untitledImages['terrasse-fleurie'] },
 ];

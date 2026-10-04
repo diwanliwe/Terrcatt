@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { StyleSheet, View, Text, ScrollView, Pressable, Linking, Switch, Platform } from 'react-native';
+import { StyleSheet, View, Text, ScrollView, Pressable, Linking, Switch, Platform, Image } from 'react-native';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { useRouter } from 'expo-router';
 import { useCards } from '@/context/CardContext';
@@ -37,6 +37,17 @@ const ILLUSTRATIONS_CREDIT = {
   url: 'https://media.hal.science/view/index/docid/5750828',
 };
 
+// Welcome-screen valley view (onboarding), freely licensed: attribution required.
+const ENTRY_PHOTO_CREDIT = {
+  citation: "Horizon06, « Breil-sur-Roya, vue depuis le sommet de l'Arpette ».",
+  licence: 'Licence CC BY-SA 4.0, Wikimedia Commons (contraste retouché).',
+  url: 'https://commons.wikimedia.org/wiki/File:Breil-sur-Roya_Vue_depuis_le_sommet_de_l%27Arpette.jpg',
+};
+
+// Landscape photographs sent by the client (30 Sept 2026), taken in the Roya
+// valley in April 2025. TODO: confirm the photographer's name for the credit.
+const BANNER_PHOTO = require('@/assets/images/roya-oliviers.jpg');
+
 const TEAM: { name: string; role: string }[] = [
   { name: 'Marianne Cohen', role: 'Professeure de biogéographie, laboratoire Médiations, Faculté des Lettres' },
   { name: 'Christian Gorini', role: 'Professeur de géosciences, ISTeP, Faculté des Sciences et Ingénierie' },
@@ -45,7 +56,7 @@ const TEAM: { name: string; role: string }[] = [
 
 export default function SettingsScreen() {
   const router = useRouter();
-  const { state, setAnimationsEnabled, resetAll } = useCards();
+  const { state, setAnimationsEnabled, setExpertMode, resetAll } = useCards();
   const [confirmingDelete, setConfirmingDelete] = useState(false);
 
   const handleContact = () => {
@@ -54,6 +65,11 @@ export default function SettingsScreen() {
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent}>
+      <View style={styles.banner}>
+        <Image source={BANNER_PHOTO} style={styles.bannerImage} resizeMode="cover" />
+        <Text style={styles.bannerCaption}>Oliveraie en terrasses, vallée de la Roya</Text>
+      </View>
+
       <View style={styles.projectHeader}>
         <Text style={styles.projectName}>Projet Terrcatt</Text>
         <Text style={styles.projectSubtitle}>
@@ -146,12 +162,42 @@ export default function SettingsScreen() {
           </View>
           <FontAwesome name="external-link" size={14} color="#C4956A" />
         </Pressable>
+        <Text style={styles.paragraph}>
+          Les photographies de terrasses (cette page et les fiches des cartes) ont été prises
+          dans la vallée de la Roya en avril 2025 par l'équipe du projet. La vue de la vallée
+          en page d'accueil est publiée sous licence libre :
+        </Text>
+        <Pressable
+          style={({ pressed }) => [styles.linkRow, pressed && { opacity: 0.6 }]}
+          onPress={() => Linking.openURL(ENTRY_PHOTO_CREDIT.url)}
+        >
+          <View style={styles.prefText}>
+            <Text style={styles.memberRole}>{ENTRY_PHOTO_CREDIT.citation}</Text>
+            <Text style={styles.memberRole}>{ENTRY_PHOTO_CREDIT.licence}</Text>
+          </View>
+          <FontAwesome name="external-link" size={14} color="#C4956A" />
+        </Pressable>
       </View>
 
       <View style={styles.divider} />
 
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Préférences</Text>
+        <View style={styles.prefRow}>
+          <View style={styles.prefText}>
+            <Text style={styles.prefLabel}>Mode expert</Text>
+            <Text style={styles.prefHint}>
+              Cartes sans titre : devinez ce qu'elles illustrent et proposez votre propre titre.
+              Option en test.
+            </Text>
+          </View>
+          <Switch
+            value={state.expertMode}
+            onValueChange={setExpertMode}
+            trackColor={{ true: '#C4956A', false: '#DDD' }}
+            thumbColor="#fff"
+          />
+        </View>
         <View style={styles.prefRow}>
           <View style={styles.prefText}>
             <Text style={styles.prefLabel}>Animations</Text>
@@ -234,6 +280,21 @@ const styles = StyleSheet.create({
   },
   section: {
     marginBottom: 24,
+  },
+  banner: {
+    marginBottom: 20,
+  },
+  bannerImage: {
+    width: '100%',
+    height: 200,
+    borderRadius: 16,
+    backgroundColor: '#E3ECFF',
+  },
+  bannerCaption: {
+    fontSize: 12,
+    color: '#999',
+    marginTop: 6,
+    textAlign: 'right',
   },
   projectHeader: {
     marginBottom: 24,

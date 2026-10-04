@@ -101,7 +101,7 @@ Key reducer actions: `SWIPE_FIRST_PASS`, `SWIPE_SECOND_PASS`, `COMPARE_WIN`, `CO
 
 ## Card Data
 
-18 cards defined in `context/CardContext.tsx` with square 1024px JPG images in `/assets/cards/` (final designs, Sept 2026; terrain-truth scores in `components/results/resultsData.ts`). Card images use `require()` for static Expo imports.
+18 cards defined in `context/CardContext.tsx` with square 1024px JPG images in `/assets/cards/` (final designs, Sept 2026; terrain-truth scores in `components/results/resultsData.ts`). The same artwork without titles lives in `/assets/cards/untitled/` (`imageUntitled`): used by the expert mode (`state.expertMode`, toggle in « En savoir plus ») and reserved for future translated versions. Landscape photographs are in `/assets/images/roya-*.jpg`. Card images use `require()` for static Expo imports.
 
 ## Language
 

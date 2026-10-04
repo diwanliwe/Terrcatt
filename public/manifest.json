@@ -1,7 +1,7 @@
 {
   "name": "Terrcatt : le jeu des terrasses",
   "short_name": "Terrcatt",
-  "description": "Jeu de partage des connaissances sur les terrasses de culture de la vallée de la Roya. Projet Terrcatt, Sorbonne Université.",
+  "description": "Les terrasses de culture, un patrimoine paysager face au changement climatique. Terrcatt, un jeu de partage des connaissances pour aider à la décision de réhabiliter les terrasses. Projet Terrcatt, Sorbonne Université.",
   "lang": "fr",
   "start_url": "/",
   "scope": "/",

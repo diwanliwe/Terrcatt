@@ -1,5 +1,14 @@
-import React, { useCallback, useRef } from 'react';
-import { StyleSheet, View, Text, Pressable, useWindowDimensions } from 'react-native';
+import React, { useCallback, useRef, useState } from 'react';
+import {
+  StyleSheet,
+  View,
+  Text,
+  Pressable,
+  TextInput,
+  KeyboardAvoidingView,
+  Platform,
+  useWindowDimensions,
+} from 'react-native';
 import { useRouter } from 'expo-router';
 import Animated, {
   useSharedValue,
@@ -24,7 +33,11 @@ const EXIT_MS = 260;
 const ENTER_MS = 200;
 
 export function RateMode() {
-  const { state, rateCard, nextRatingCard, startNewRun } = useCards();
+  const { state, rateCard, nextRatingCard, startNewRun, setCardTitle } = useCards();
+  // Expert mode (test option, « En savoir plus »): the card has no title and the
+  // player may write what they think it illustrates before voting.
+  const expert = state.expertMode;
+  const [proposedTitle, setProposedTitle] = useState('');
   const router = useRouter();
   const { width } = useWindowDimensions();
   const currentIndex = state.currentRatingIndex;
@@ -38,6 +51,8 @@ export function RateMode() {
 
   const commitRating = useCallback(
     (cardId: number, score: number) => {
+      if (expert && proposedTitle.trim()) setCardTitle(cardId, proposedTitle);
+      setProposedTitle('');
       rateCard(cardId, score);
       nextRatingCard();
       // Prepare and play the next card's entrance
@@ -48,7 +63,7 @@ export function RateMode() {
       opacity.value = withTiming(1, { duration: ENTER_MS });
       animating.current = false;
     },
-    [rateCard, nextRatingCard, translateX, scale, opacity]
+    [expert, proposedTitle, setCardTitle, rateCard, nextRatingCard, translateX, scale, opacity]
   );
 
   const handleRate = useCallback(
@@ -95,11 +110,19 @@ export function RateMode() {
   }));
 
   return (
-    <View style={styles.container}>
+    <KeyboardAvoidingView
+      style={styles.container}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+    >
       <View style={styles.progressContainer}>
         <Text style={styles.progressText}>
           {isComplete ? 'Terminé !' : `${currentIndex + 1}/${CARDS.length}`}
         </Text>
+        {expert && !isComplete && (
+          <View style={styles.expertBadge}>
+            <Text style={styles.expertBadgeText}>Mode expert</Text>
+          </View>
+        )}
       </View>
 
       <View style={styles.cardContainer}>
@@ -125,13 +148,25 @@ export function RateMode() {
           </Animated.View>
         ) : (
           <Animated.View style={cardAnimatedStyle}>
-            <Card card={currentCard} size="large" />
+            <Card card={currentCard} size="large" untitled={expert} />
           </Animated.View>
         )}
       </View>
 
       {!isComplete && (
         <View style={styles.buttonsContainer}>
+          {expert && (
+            <TextInput
+              style={styles.titleInput}
+              value={proposedTitle}
+              onChangeText={setProposedTitle}
+              placeholder="Quel titre donneriez-vous à cette carte ?"
+              placeholderTextColor="#A39E98"
+              maxLength={80}
+              returnKeyType="done"
+              autoCorrect
+            />
+          )}
           <View style={styles.buttonsBlock}>
             <View style={styles.buttonsRow}>
               {RATING_OPTIONS.map((option) => (
@@ -157,7 +192,7 @@ export function RateMode() {
           </View>
         </View>
       )}
-    </View>
+    </KeyboardAvoidingView>
   );
 }
 
@@ -169,6 +204,35 @@ const styles = StyleSheet.create({
   },
   progressContainer: {
     marginBottom: 20,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  expertBadge: {
+    backgroundColor: '#FAF3EC',
+    borderWidth: 1,
+    borderColor: '#E8D9C8',
+    borderRadius: 999,
+    paddingHorizontal: 10,
+    paddingVertical: 3,
+  },
+  expertBadgeText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#8A6240',
+  },
+  titleInput: {
+    width: '100%',
+    maxWidth: 420,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1.5,
+    borderColor: '#DEDDDA',
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    fontSize: 15,
+    color: '#333',
+    marginBottom: 14,
   },
   progressText: {
     fontSize: 18,

@@ -212,3 +212,58 @@ them the stats still run and the keep-alive logs a notice. Read the summary
 with `select * from daily_stats order by day desc;`, force a recompute with
 `select record_daily_stats('2026-09-24');`, check the job with
 `select * from cron.job_run_details order by start_time desc limit 10;`.
+
+## Expert mode, title-less cards, entry photographs (2026-10-02)
+
+From the client's 30 Sept mail (cards with and without title + two landscape
+photographs) and the reply that promised the changes for the week.
+
+- **Title-less artwork**: `assets/cards/untitled/<slug>.jpg`, same crop/size as
+  the titled set (script kept in the session scratchpad; crop = inside the drawn
+  border, square, 1024 px JPG). `CardData.imageUntitled`, `Card` takes
+  `untitled`. The titled files resent on 30 Sept are byte-identical to the Sept
+  batch except « oliveraie fleurie », which is a 923 px re-export of the same
+  design: the higher-resolution Sept version was kept.
+- **Mode expert** (test option, « En savoir plus » → Préférences): the Rate
+  screen shows the card without its title, with a « Mode expert » badge and an
+  optional text field « Quel titre donneriez-vous à cette carte ? ». The title
+  is stored in `cardTitles[cardId]` (snapshot, cleared on « Recommencer »), the
+  toggle and each title are logged as `expert` (value 1/0) / `title` events so
+  runs can be told apart in analysis. The card detail page shows « Votre titre »
+  under the real one. No migration needed (`events.type` is free text). Decide
+  with the client after testing whether it stays, and whether some cards should
+  stay fully « blanches » (the client's idea).
+- **Photographs**: `assets/images/roya-terrasses.jpg` (onboarding hook, card
+  detail « Pour aller plus loin ») and `roya-oliviers.jpg` (banner on « En savoir
+  plus »). EXIF stripped (phone photos), 1200 px. Photographer credit is
+  generic (« l'équipe du projet ») until confirmed.
+- **Key phrase** on the landing screen and in the web/PWA descriptions.
+- **Not done**: the banner (« Projet Banderole.jpg ») and the drone orthophoto
+  wait for the rights answer (Barbara / association, GDPR for the drone image).
+  English and Italian versions: the title-less artwork is the groundwork; the
+  app still needs an i18n layer and the translated titles/explanations from the
+  team.
+
+## Onboarding rework after the client call (2026-10-04)
+
+Feedback from the call: the first page should be positive (no storm), set the scene
+and make the app's name obvious; the explanation of the game at the end was confusing.
+
+- **Welcome screen**: two candidates kept for the client to choose, shown one after
+  the other with a « Version A / B » badge (`HOOK_VERSIONS`, steps `hook` and
+  `hookPhoto` in `app/onboarding.tsx`). A = photo full screen, text on top; B = photo
+  on the top half, text below. Same text in both, in this order: « Terrcatt », what it
+  is (« Un jeu de partage des connaissances… »), the valley (« Dans la vallée de la
+  Roya… 23 000 terrasses en pierre sèche… UNESCO »). Once chosen, delete the other
+  step, the badges and `HOOK_VERSIONS`.
+- **Photo**: `assets/images/roya-vallee.jpg`, Breil-sur-Roya from the Arpette summit
+  (Horizon06, Wikimedia Commons, CC BY-SA 4.0, contrast retouched), credited with a
+  link in « En savoir plus ». The client's photos stay on « En savoir plus » and the
+  card detail page.
+- **How it works**: the single « À vous de jouer » page became three pages (cards go
+  by one after another / the -2…+2 question / no wrong answer and comparison with the
+  study). Spec in `docs/onboarding/CLAUDE.md` §S5.
+- Key words in onboarding paragraphs are bold (`Strong`) for diagonal reading.
+- **Not on screen any more**: the client's key phrase « Les terrasses de culture, un
+  patrimoine paysager face au changement climatique » (removed by choice for a shorter
+  screen; still in the PWA description), to confirm with the client.

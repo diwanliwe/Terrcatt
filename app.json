@@ -33,7 +33,7 @@
       "lang": "fr",
       "themeColor": "#FDFCFA",
       "backgroundColor": "#FDFCFA",
-      "description": "Jeu de partage des connaissances sur les terrasses de culture de la vallée de la Roya."
+      "description": "Les terrasses de culture, un patrimoine paysager face au changement climatique. Terrcatt, un jeu de partage des connaissances pour aider à la décision de réhabiliter les terrasses."
     },
     "plugins": [
       "expo-router",
